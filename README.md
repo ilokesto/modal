@@ -1,3 +1,14 @@
+# Deprecated
+
+`@ilokesto/grunfeld` is deprecated.
+
+- Start from `@ilokesto/overlay`.
+- Use `@ilokesto/modal` and `@ilokesto/toast` for product-level replacements.
+- Migration guide: https://ilokesto.ayden94.com/ko/migrate/grunfeld
+- This package is frozen and receives no new features.
+
+Legacy reference is kept below for existing users only.
+
 Language : [영어](./EN_README.md) | 한국어
 
 # Grunfeld

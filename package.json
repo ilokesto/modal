@@ -1,6 +1,6 @@
 {
   "name": "@ilokesto/grunfeld",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -20,7 +20,9 @@
     "type": "git",
     "url": "git+https://github.com/ilokesto/grunfeld"
   },
+  "homepage": "https://ilokesto.ayden94.com/ko/migrate/grunfeld",
   "keywords": [],
+  "description": "Deprecated. Use @ilokesto/overlay, @ilokesto/modal, and @ilokesto/toast: https://ilokesto.ayden94.com/ko/migrate/grunfeld",
   "author": "Jeong Jinho <wpfekdml@me.com>",
   "license": "MIT",
   "publishConfig": {
