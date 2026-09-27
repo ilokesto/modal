@@ -1,0 +1,59 @@
+---
+title: "API 레퍼런스"
+description: "Modal export, option, 기본값, command, lifecycle 동작을 정확히 설명합니다."
+---
+
+# API 레퍼런스
+
+모든 공개 API는 `@ilokesto/modal`에서 내보냅니다.
+
+## `ModalProvider`
+
+`ModalProvider({ children, store? })`는 모달 어댑터를 등록합니다. `store`를 지정하지 않으면 `globalModalStore`를 사용합니다. `OverlayStoreApi`를 전달하면 모달 닫힘 알림을 추가하도록 스토어를 감싸고 독립된 프로바이더 스택을 만듭니다.
+
+## `useModal()`
+
+`{ display, close, closeAll, reject, remove, clear }`를 반환합니다.
+
+| 명령 | 결과 |
+|---|---|
+| `display<TResult>(options)` | 모달을 열고 `Promise<TResult \| undefined>`를 반환합니다. 이 Promise는 모달이 제거될 때 처리됩니다. |
+| `close(id, result?)` | 열려 있는 모달 하나를 `closing` 상태로 바꾸고 결과를 기록합니다. |
+| `closeAll()` | 열려 있는 모든 모달을 `closing` 상태로 바꿉니다. 어댑터가 나중에 모달을 제거합니다. |
+| `reject(id, reason?)` | 모달 하나를 `closing` 상태로 바꿉니다. 모달이 제거되면 Promise가 거부됩니다. |
+| `remove(id?)` | 지정한 ID의 항목을 즉시 제거합니다. ID를 생략하면 가장 최근 항목을 제거합니다. |
+| `clear()` | 모든 항목을 즉시 제거하고 관련 Promise를 처리합니다. |
+
+## `modal`과 `globalModalStore`
+
+`modal`은 위 명령과 더불어 Promise 대신 ID를 반환하는 `open(options): string`을 제공합니다. 이 API는 항상 `globalModalStore`를 대상으로 합니다. `globalModalStore`는 기본 프로바이더가 사용하는 공개 `OverlayStoreApi`입니다.
+
+## 표시 옵션
+
+`UseModalOptions<TResult>`와 `ModalFacadeOptions<TResult>`는 `id?`와 `ModalProps<TResult>`를 결합합니다.
+
+| 옵션 | 타입 | 기본값 |
+|---|---|---|
+| `render` | `(close, context) => ReactNode` | 필수 |
+| `transport` | `'inline' \| 'top-layer'` | `'inline'` |
+| `position` | 중앙/가장자리/모서리의 9개 값 | `'center'` |
+| `role` | `'dialog' \| 'alertdialog'` | `'dialog'` |
+| `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy` | `string` | 없음 |
+| `dismissible` | `boolean` | `true` |
+| `onDismiss` | `() => void` | 없음 |
+| `onModalClose` | `(result?) => void` | 없음 |
+| `className`, `backdropClassName` | `string` | 없음 |
+| `style`, `backdropStyle` | `CSSProperties` | 없음 |
+| `autoFocus`, `restoreFocus` | `boolean` | `true` |
+
+위치는 `center`, `top`, `bottom`, `left`, `right`, `top-left`, `top-right`, `bottom-left`, `bottom-right`입니다.
+
+렌더 컨텍스트는 `{ id, status, isOpen, close }`이며, 범위가 지정된 `close`는 항상 해당 모달만 대상으로 합니다.
+
+## 콜백 동작
+
+`onDismiss`는 허용된 Escape 키 또는 백드롭을 통한 닫기에서만 실행됩니다. `onModalClose`는 최초의 닫기, 거부, 직접 제거 또는 전체 삭제 경로에서 한 번 실행됩니다. 일반적인 `close(id, result)` 호출은 즉시 `result`를 전달합니다. `closeAll()`은 즉시 알리지 않고, 나중에 어댑터가 모달을 제거할 때 `undefined`를 전달해 호출합니다. 직접 호출한 `remove()`와 거부도 `undefined`를 전달합니다.
+
+## 공개 타입
+
+`ModalProviderProps`, `UseModalOptions`, `ModalFacadeOptions`, `ModalProps`, `ModalAdapterProps`, `ModalPosition`, `ModalClose`, `ModalCloseHandler`, `ModalRender`, `ModalRenderContext`.

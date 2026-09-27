@@ -1,10 +1,58 @@
 ---
-title: "@ilokesto/modal"
-description: Documentation coming soon
+title: "Modal"
+description: "Accessible, awaitable React modals with inline and native top-layer transports."
 ---
 
-# @ilokesto/modal
+# Modal
 
-Documentation for `@ilokesto/modal` is coming soon.
+`@ilokesto/modal` is the ready-to-use modal layer for React applications. It supplies dialog rendering, focus management, Escape and backdrop dismissal, scroll locking, stacking, motion, and typed awaitable results on top of `@ilokesto/overlay`.
 
-> This documentation lives in `packages/modal/docs` in the ilokesto monorepo.
+## Install
+
+```package-install
+@ilokesto/modal react react-dom
+```
+
+## Shortest useful example
+
+```tsx lineNumbers
+import { ModalProvider, useModal } from '@ilokesto/modal';
+
+function DeleteButton() {
+  const { display } = useModal();
+
+  async function confirmDelete() {
+    const confirmed = await display<boolean>({
+      ariaLabelledBy: 'delete-title',
+      render: (close) => (
+        <section style={{ padding: 24, background: 'white', borderRadius: 12 }}>
+          <h2 id="delete-title">Delete project?</h2>
+          <button onClick={() => close(false)}>Cancel</button>
+          <button onClick={() => close(true)}>Delete</button>
+        </section>
+      ),
+    });
+
+    if (confirmed) console.log('Delete the project');
+  }
+
+  return <button onClick={() => void confirmDelete()}>Delete project</button>;
+}
+
+export function App() {
+  return <ModalProvider><DeleteButton /></ModalProvider>;
+}
+```
+
+The promise resolves after the closing motion and removal, not when `close` is first requested.
+
+## Modal or Overlay?
+
+Choose `@ilokesto/modal` for normal dialogs. It already owns the hard modal policies: accessible naming, focus trap and restoration, body scroll lock, topmost-only dismissal, backdrop behavior, positions, and reduced motion. Choose [`@ilokesto/overlay`](/en/overlay) only when you are designing a new overlay family or need to own those policies yourself. For notifications, choose [`@ilokesto/toast`](/en/toast).
+
+## What to read next
+
+- [Quick start](/en/modal/quick-start) builds a complete confirmation flow.
+- [Core concepts](/en/modal/core-concepts) explains providers, stacks, and close timing.
+- [Practical guide](/en/modal/practical-guide) covers accessibility, transport, styling, and global usage.
+- [API reference](/en/modal/api-reference) lists the exact public surface.
