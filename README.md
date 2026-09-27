@@ -6,6 +6,12 @@ A React modal package built on top of `@ilokesto/overlay`, following Grunfeld's 
 
 `@ilokesto/modal` keeps modal policy inside the package: dismiss rules, focus handling, scroll lock, inline vs top-layer transport, backdrop behavior, and enter/exit animation. It uses `@ilokesto/overlay` only for presence lifecycle, so modal content can stay mounted during the closing phase and resolve after the exit motion finishes.
 
+## Documentation
+
+- Full docs: [English](https://ilokesto.ayden94.com/en/modal) · [한국어](https://ilokesto.ayden94.com/ko/modal)
+- Source: [packages/modal](https://github.com/ilokesto/ilokesto/tree/main/packages/modal)
+- npm: [@ilokesto/modal](https://www.npmjs.com/package/@ilokesto/modal)
+
 ## Features
 
 - **Awaitable modal flows** — `display()` returns a Promise that resolves after exit animation

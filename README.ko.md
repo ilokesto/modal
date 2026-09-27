@@ -4,6 +4,12 @@
 
 Grunfeld의 awaitable dialog 철학을 유지하면서, 기본 motion을 더 부드럽게 만든 `@ilokesto/overlay` 기반 React modal 패키지입니다.
 
+## 문서
+
+- 전체 문서: [English](https://ilokesto.ayden94.com/en/modal) · [한국어](https://ilokesto.ayden94.com/ko/modal)
+- 소스: [packages/modal](https://github.com/ilokesto/ilokesto/tree/main/packages/modal)
+- npm: [@ilokesto/modal](https://www.npmjs.com/package/@ilokesto/modal)
+
 `@ilokesto/modal`은 modal 정책을 패키지 내부에 둡니다. dismiss 규칙, focus 처리, scroll lock, inline / top-layer transport, backdrop 동작, enter/exit animation은 이 패키지에서 담당하고, `@ilokesto/overlay`는 presence lifecycle만 맡습니다. 그래서 modal은 닫히는 동안에도 잠깐 살아 있으면서 exit motion을 끝낸 뒤 resolve될 수 있습니다.
 
 ## Features
