@@ -27,6 +27,10 @@ await display({
 
 인라인 어댑터는 최상단 모달 안에 포커스를 가두고 첫 번째 컨트롤이나 패널에 포커스를 둡니다. 또한 이전 포커스를 복원하고 본문 스크롤을 잠급니다. 최상위 레이어 모드에서는 네이티브 `<dialog>`가 포커스 가두기를 처리합니다. 애플리케이션에서 이 동작을 의도적으로 대체할 때만 `autoFocus`나 `restoreFocus`를 `false`로 설정하세요.
 
+두 전송 방식 모두 DOM 순서에서 첫 번째 유효한 컨트롤을 초기 포커스 대상으로 선택합니다. 인라인 Tab 순환도 같은 후보를 사용합니다. 음수 `tabIndex`, 숨겨진 input, 비활성 컨트롤(비활성 fieldset 내부 포함), 그리고 자신이나 조상의 `hidden`, `inert`, `aria-hidden="true"`, `display: none`, `visibility: hidden` / `collapse` 또는 조상의 `content-visibility: hidden`으로 숨겨진 컨트롤은 제외됩니다. 자식이 `visibility: visible`을 지정하면 상속된 `visibility: hidden`을 덮어쓸 수 있으며, 진입 애니메이션 중의 opacity는 후보를 제외하지 않습니다. 후보가 없으면 패널이나 네이티브 대화상자에 포커스를 둡니다.
+
+최상위 레이어의 키보드 포커스 가두기는 계속 네이티브 `showModal()`이 담당하며 조상의 `inert`에서는 벗어납니다. 대화상자 자체나 내부 콘텐츠의 `inert`는 적용됩니다. 후보 필터링이 `aria-hidden`에 브라우저 키보드 포커스 차단 기능을 추가하지는 않습니다. 키보드 사용자도 콘텐츠에 접근할 수 없어야 한다면 `hidden`이나 `inert`를 사용하세요.
+
 ## 전송 방식 선택
 
 패키지가 일관되게 위치, 백드롭, 모션을 제어하도록 하려면 기본값인 `transport: 'inline'`을 사용하세요. 잘림이나 스태킹 컨텍스트를 벗어나야 한다면 `transport: 'top-layer'`를 사용합니다.

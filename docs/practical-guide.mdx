@@ -27,6 +27,10 @@ await display({
 
 The inline adapter traps focus in the top modal, focuses the first control (or panel), restores prior focus, and locks body scroll. Native `<dialog>` handles focus containment in top-layer mode. Set `autoFocus` or `restoreFocus` to `false` only when your application replaces that behavior deliberately.
 
+Both transports choose the first eligible autofocus control in DOM order. Inline Tab wrapping uses the same candidates. Negative `tabIndex`, hidden inputs, disabled controls (including disabled fieldsets), and controls hidden by `hidden`, `inert`, `aria-hidden="true"`, `display: none`, `visibility: hidden` / `collapse`, or an ancestor's `content-visibility: hidden` are excluded. A visible child can override inherited `visibility: hidden`; opacity during the entry animation does not exclude controls. If no candidate remains, the panel or native dialog receives focus.
+
+Native `showModal()` still owns top-layer keyboard containment and escapes an ancestor's `inert`; `inert` on the dialog itself or its content still applies. Candidate filtering does not make `aria-hidden` prevent browser keyboard focus. Use `hidden` or `inert` when content must also be unavailable to keyboard users.
+
 ## Choose a transport
 
 Use the default `transport: 'inline'` for consistent package-controlled positioning, backdrop, and motion. Use `transport: 'top-layer'` when the dialog must escape clipping and stacking contexts:

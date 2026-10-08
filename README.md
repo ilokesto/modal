@@ -214,6 +214,8 @@ await display({
 
 For dialogs without a visible title, use `ariaLabel`. Use `role: 'alertdialog'` only for urgent confirmation flows that require immediate attention.
 
+Autofocus in both transports and inline Tab wrapping use eligible controls in DOM order, excluding hidden, inert, CSS-hidden, disabled, and negative-`tabIndex` controls. With no eligible control, focus falls back to the panel or dialog. Native `<dialog>` retains its own keyboard containment. See the [focus candidate contract](./docs/practical-guide.mdx) for ancestor visibility and native inert behavior.
+
 ### React Compiler note
 
 The `render` callback must stay pure. Do not call hooks, create nested components, mutate captured values, or run side effects directly inside it. If the modal body needs hooks, return a real component and pass `close` as a prop.

@@ -1,5 +1,75 @@
 import { expect, test } from '@playwright/test';
 
+for (const transport of ['inline', 'top-layer'] as const) {
+  for (const candidate of [
+    'hidden',
+    'hidden-ancestor',
+    'inert',
+    'inert-ancestor',
+    'display-none',
+    'display-none-ancestor',
+    'visibility-hidden',
+    'visibility-hidden-ancestor',
+    'visibility-collapse',
+    'content-visibility-hidden',
+    'negative-tabindex',
+    'other-negative-tabindex',
+    'hidden-input',
+    'disabled',
+    'disabled-fieldset',
+  ]) {
+    test(`${transport} focus candidates: ${candidate} -> eligible autofocus, keyboard navigation and restoration`, async ({ page }) => {
+      await page.goto(`/?candidate=${candidate}`);
+      const opener = page.getByRole('button', { name: `Open ${transport} focus candidates` });
+      const dialog = page.getByRole('dialog', { name: 'Focus candidates' });
+      const first = dialog.getByRole('button', { name: 'First eligible' });
+      const last = dialog.getByRole('button', { name: 'Last eligible' });
+
+      await opener.click();
+
+      await expect(first).toBeFocused();
+      for (const control of [
+        dialog.getByRole('link', { name: 'Eligible link' }),
+        dialog.getByRole('textbox', { name: 'Eligible input', exact: true }),
+        dialog.getByRole('combobox', { name: 'Eligible select' }),
+        dialog.getByRole('textbox', { name: 'Eligible textarea' }),
+        dialog.getByText('Eligible tabindex', { exact: true }),
+        last,
+      ]) {
+        await page.keyboard.press('Tab');
+        await expect(control).toBeFocused();
+      }
+      if (transport === 'inline') {
+        await page.keyboard.press('Tab');
+        await expect(first).toBeFocused();
+        await page.keyboard.press('Shift+Tab');
+        await expect(last).toBeFocused();
+      } else {
+        // Native dialog owns boundary traversal; do not impose the inline trap.
+        await page.keyboard.press('Shift+Tab');
+        await expect(dialog.getByText('Eligible tabindex', { exact: true })).toBeFocused();
+      }
+      await page.keyboard.press('Escape');
+      await expect(dialog).toBeHidden();
+      await expect(opener).toBeFocused();
+    });
+  }
+}
+
+test('top-layer focus candidates: inert provider ancestor -> modal controls remain eligible', async ({ page }) => {
+  await page.goto('/?candidate=negative-tabindex');
+  await page.locator('main').evaluate((element) => element.setAttribute('inert', ''));
+
+  await page.getByRole('button', { name: 'Open top-layer focus candidates' }).dispatchEvent('click');
+
+  const dialog = page.getByRole('dialog', { name: 'Focus candidates' });
+  await expect(dialog.getByRole('button', { name: 'First eligible' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(dialog.getByRole('link', { name: 'Eligible link' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+});
+
 test('inline modal resolves with scoped close and restores focus', async ({ page }) => {
   await page.goto('/');
 

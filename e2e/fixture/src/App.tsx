@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createOverlayStore } from '@ilokesto/overlay';
 import { ModalProvider, useModal } from '../../../src';
@@ -180,6 +181,51 @@ function ProviderIsolationDemo() {
   );
 }
 
+function FocusCandidatesButton({ transport }: { transport: 'inline' | 'top-layer' }) {
+  const { display } = useModal();
+  const candidate = new URLSearchParams(window.location.search).get('candidate') ?? 'hidden';
+  const excludedCandidates: Record<string, ReactNode> = {
+    hidden: <button hidden>Excluded</button>,
+    'hidden-ancestor': <div hidden><button>Excluded</button></div>,
+    inert: <button {...{ inert: '' }}>Excluded</button>,
+    'inert-ancestor': <div {...{ inert: '' }}><button>Excluded</button></div>,
+    'display-none': <button style={{ display: 'none' }}>Excluded</button>,
+    'display-none-ancestor': <div style={{ display: 'none' }}><button>Excluded</button></div>,
+    'visibility-hidden': <button style={{ visibility: 'hidden' }}>Excluded</button>,
+    'visibility-hidden-ancestor': <div style={{ visibility: 'hidden' }}><button>Excluded</button></div>,
+    'visibility-collapse': <button style={{ visibility: 'collapse' }}>Excluded</button>,
+    'content-visibility-hidden': <div style={{ contentVisibility: 'hidden' }}><button>Excluded</button></div>,
+    'negative-tabindex': <button tabIndex={-1}>Excluded</button>,
+    'other-negative-tabindex': <a href="#excluded" tabIndex={-2}>Excluded</a>,
+    'hidden-input': <input type="hidden" tabIndex={0} />,
+    disabled: <button disabled tabIndex={0}>Excluded</button>,
+    'disabled-fieldset': <fieldset disabled><button>Excluded</button></fieldset>,
+  };
+
+  const open = () => {
+    void display({
+      transport,
+      ariaLabel: 'Focus candidates',
+      render: (close) => (
+        <section style={{ background: 'white', padding: 24 }}>
+          <h2>Focus candidates</h2>
+          {excludedCandidates[candidate]}
+          <button type="button">First eligible</button>
+          <a href="#focus-candidates">Eligible link</a>
+          <label>Eligible input<input /></label>
+          <label>Eligible select<select><option>Option</option></select></label>
+          <label>Eligible textarea<textarea /></label>
+          <div tabIndex={0}>Eligible tabindex</div>
+          <button type="button" onClick={() => close()}>Last eligible</button>
+          {excludedCandidates[candidate]}
+        </section>
+      ),
+    });
+  };
+
+  return <button type="button" onClick={open}>Open {transport} focus candidates</button>;
+}
+
 function DemoApp() {
   return (
     <main>
@@ -188,6 +234,8 @@ function DemoApp() {
         <InlineConfirmButton />
         <TopLayerButton />
         <StackedButton />
+        <FocusCandidatesButton transport="inline" />
+        <FocusCandidatesButton transport="top-layer" />
       </ModalProvider>
       <ProviderIsolationDemo />
     </main>

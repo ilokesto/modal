@@ -214,6 +214,8 @@ await display({
 
 보이는 제목이 없는 dialog라면 `ariaLabel`을 사용하세요. `role: 'alertdialog'`는 즉각적인 주의가 필요한 중요한 확인 흐름에만 사용하세요.
 
+두 전송 방식의 초기 포커스와 인라인 Tab 순환은 DOM 순서의 유효한 컨트롤을 사용하며, hidden, inert, CSS로 숨겨진 컨트롤, 비활성 컨트롤, 음수 `tabIndex` 컨트롤은 제외합니다. 유효한 컨트롤이 없으면 패널이나 대화상자에 포커스를 둡니다. 네이티브 `<dialog>`의 키보드 포커스 가두기는 그대로 유지됩니다. 조상의 표시 상태와 네이티브 inert 동작은 [포커스 후보 계약](./docs/practical-guide.ko.mdx)을 참고하세요.
+
 ### React Compiler note
 
 `render` callback은 순수하게 유지해야 합니다. callback 안에서 hook 호출, 중첩 컴포넌트 정의, 캡처 값 mutation, side effect 실행을 하지 마세요. hook이 필요한 modal body는 실제 컴포넌트로 분리하고 `close`를 prop으로 넘기세요.
