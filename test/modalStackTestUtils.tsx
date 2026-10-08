@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { render } from '@testing-library/react';
-import {
-  createModalStackRuntime,
-  ModalStackRuntimeContext,
-} from '../src/hooks/useIsTopModal';
+import { createModalStackRuntime } from '../src/core/createModalStackRuntime';
+import { ModalStackRuntimeContext } from '../src/shared/ModalStackRuntimeContext';
 
 function ModalStackTestProvider({ children }: { readonly children: ReactNode }) {
   const runtime = useMemo(createModalStackRuntime, []);

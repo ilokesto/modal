@@ -1,23 +1,8 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useModalStackInfo } from '../hooks/useIsTopModal';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import { getCloseAnimationDurationMs, getCloseFallbackDelayMs } from '../shared/animationDuration';
+import { useModalExit } from '../hooks/useModalExit';
+import { getFocusableElements } from '../shared/getFocusableElements';
 import type { ModalAdapterProps, ModalPosition } from '../shared/types';
-
-const focusableSelector = [
-  'button:not([disabled])',
-  '[href]',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(', ');
-
-function getFocusableElements(container: HTMLElement): HTMLElement[] {
-  return [...container.querySelectorAll<HTMLElement>(focusableSelector)].filter(
-    (el) => el.getAttribute('aria-hidden') !== 'true'
-  );
-}
 
 function getPositionStyles(pos?: ModalPosition): React.CSSProperties {
   switch (pos) {
@@ -62,7 +47,6 @@ export function ModalAdapterInline<TResult>({
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const { containsTarget, isTopModal, stackIndex } = useModalStackInfo(id, wrapperRef);
-  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Body scroll lock
   useEffect(() => {
@@ -80,29 +64,7 @@ export function ModalAdapterInline<TResult>({
     };
   }, []);
 
-  // Reduced motion fast-track removal
-  useEffect(() => {
-    if (status === 'closing') {
-      if (prefersReducedMotion) {
-        remove();
-      }
-    }
-  }, [status, prefersReducedMotion, remove]);
-
-  // Closing fallback: guarantee removal even when a consumer style suppresses
-  // the exit animation so no animationend ever fires.
-  useEffect(() => {
-    if (status !== 'closing' || prefersReducedMotion) {
-      return;
-    }
-    const delay = getCloseFallbackDelayMs(getCloseAnimationDurationMs(containerRef.current));
-    const timer = window.setTimeout(() => {
-      remove();
-    }, delay);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [status, prefersReducedMotion, remove]);
+  const { prefersReducedMotion, handleAnimationEnd } = useModalExit(containerRef, status, remove);
 
   useEffect(() => {
     previousFocusRef.current = document.activeElement as HTMLElement | null;
@@ -188,12 +150,6 @@ export function ModalAdapterInline<TResult>({
     },
     [close, dismissible, isTopModal, onDismiss, status]
   );
-
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    if (status === 'closing' && e.target === e.currentTarget) {
-      remove();
-    }
-  }, [status, remove]);
 
   const isClosing = status === 'closing';
   const content = render(close, { id, status, isOpen, close });

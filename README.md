@@ -301,13 +301,19 @@ src/
     ModalAdapterTopLayer.tsx
   components/
     ModalProvider.tsx
+  core/
+    createModalStackRuntime.ts
   facade/
     modalFacade.ts
   hooks/
     useIsTopModal.ts
     useModal.ts
+    useModalExit.ts
     usePrefersReducedMotion.ts
   shared/
+    ModalStackRuntimeContext.ts
+    animationDuration.ts
+    getFocusableElements.ts
     lifecycle.ts
     styles.ts
     types.ts
@@ -327,15 +333,34 @@ src/
 **`src/facade`** — module-level API:
 - `modalFacade.ts` — `modal` facade and `globalModalStore`
 
+**`src/core`** — provider-local stack state:
+- `createModalStackRuntime.ts` — token-based registration, order, topness, version notifications and target membership; no React imports
+
 **`src/hooks`** — React hooks:
 - `useModal.ts` — command API (`display`, `close`, `closeAll`, `reject`, `remove`, `clear`)
-- `useIsTopModal.ts` — provider-scoped modal stack tracking for z-index, dismiss, and focus management
+- `useIsTopModal.ts` — registers entries and subscribes to the provider's stack runtime
+- `useModalExit.ts` — reduced-motion removal, exit-animation guard and fallback timer cleanup
 - `usePrefersReducedMotion.ts` — `prefers-reduced-motion` detection with legacy fallback
 
 **`src/shared`** — internal:
+- `ModalStackRuntimeContext.ts` — React context connecting the provider and stack hooks
+- `getFocusableElements.ts` — shared focus candidate selector, filtering and DOM order
+- `animationDuration.ts` — existing inline animation duration and fallback delay rules
 - `lifecycle.ts` — `createModalLifecycleStore` wrapping `OverlayStoreApi` with `onModalClose` injection
 - `styles.ts` — shared fade/scale animation keyframes
 - `types.ts` — modal props, render callback, adapter props, position contracts
+
+### Reading a modal operation
+
+Start at `ModalProvider` for ownership, then `createModalStackRuntime` for stack
+changes and `useIsTopModal` for React subscription. Each adapter retains its
+transport policy: inline owns scroll locking, focus trapping and document events;
+top-layer owns `showModal`, native cancel and backdrop geometry.
+
+Both adapters use `useModalExit` for when to finish closing. Inline supplies
+`remove`; top-layer closes its native dialog before calling `remove`. Shared
+timing does not merge the transports' focus or dismissal behavior. Markup,
+position styles, callback order and public exports stay unchanged.
 
 ## Exports
 

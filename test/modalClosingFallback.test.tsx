@@ -10,6 +10,7 @@ describe('modal closing fallback', () => {
   afterEach(() => {
     cleanup();
     document.body.style.overflow = '';
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -133,5 +134,76 @@ describe('modal closing fallback', () => {
     });
 
     expect(remove).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['inline', ModalAdapterInline],
+    ['top-layer', ModalAdapterTopLayer],
+  ] as const)('ignores descendant animation and clears the %s exit timer on unmount', (_name, Adapter) => {
+    vi.useFakeTimers();
+    const remove = vi.fn();
+    const { unmount } = renderWithModalStack(
+      <Adapter
+        id="child-animation"
+        useLifecycle={vi.fn()}
+        isOpen={false}
+        status="closing"
+        close={vi.fn()}
+        remove={remove}
+        ariaLabel="Child animation"
+        render={() => <button type="button">Animated child</button>}
+      />,
+    );
+
+    fireEvent.animationEnd(screen.getByRole('button', { name: 'Animated child' }));
+    expect(remove).not.toHaveBeenCalled();
+    unmount();
+    act(() => vi.runAllTimers());
+
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['inline', ModalAdapterInline],
+    ['top-layer', ModalAdapterTopLayer],
+  ] as const)('removes %s immediately under reduced motion without a fallback timer', (name, Adapter) => {
+    vi.useFakeTimers();
+    vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
+      matches: true,
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    }));
+    const nativeOpenAtRemoval: boolean[] = [];
+    const remove = vi.fn(() => {
+      const dialog = document.querySelector('dialog');
+      if (dialog) nativeOpenAtRemoval.push(dialog.open);
+    });
+    const renderAdapter = (status: 'open' | 'closing') => (
+      <Adapter
+        id="reduced-exit"
+        useLifecycle={vi.fn()}
+        isOpen={status === 'open'}
+        status={status}
+        close={vi.fn()}
+        remove={remove}
+        ariaLabel="Reduced motion exit"
+        render={() => null}
+      />
+    );
+    const { rerender } = renderWithModalStack(renderAdapter('open'));
+    const scheduleTimer = vi.spyOn(window, 'setTimeout');
+
+    rerender(renderAdapter('closing'));
+
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(scheduleTimer).not.toHaveBeenCalled();
+    act(() => vi.runAllTimers());
+    expect(remove).toHaveBeenCalledTimes(1);
+    if (name === 'top-layer') expect(nativeOpenAtRemoval).toEqual([false]);
   });
 });

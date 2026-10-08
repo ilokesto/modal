@@ -4,7 +4,8 @@ import type { OverlayStoreApi } from '@ilokesto/overlay';
 import { ModalAdapter } from '../adapters/ModalAdapter';
 import { globalStyles } from '../shared/styles';
 import { globalModalStore } from '../facade/modalFacade';
-import { createModalStackRuntime, ModalStackRuntimeContext } from '../hooks/useIsTopModal';
+import { createModalStackRuntime } from '../core/createModalStackRuntime';
+import { ModalStackRuntimeContext } from '../shared/ModalStackRuntimeContext';
 import { createModalLifecycleStore } from '../shared/lifecycle';
 
 export interface ModalProviderProps {

@@ -1,23 +1,8 @@
 import React, { useEffect, useRef, useCallback, useId } from 'react';
 import { useIsTopModal } from '../hooks/useIsTopModal';
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
-import { getCloseAnimationDurationMs, getCloseFallbackDelayMs } from '../shared/animationDuration';
+import { useModalExit } from '../hooks/useModalExit';
+import { getFocusableElements } from '../shared/getFocusableElements';
 import type { ModalAdapterProps, ModalPosition } from '../shared/types';
-
-const focusableSelector = [
-  'button:not([disabled])',
-  '[href]',
-  'input:not([disabled])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(', ');
-
-function getFirstFocusableElement(container: HTMLElement): HTMLElement | null {
-  return [...container.querySelectorAll<HTMLElement>(focusableSelector)].find(
-    (el) => el.getAttribute('aria-hidden') !== 'true'
-  ) ?? null;
-}
 
 function getDialogPositionStyles(pos?: ModalPosition): React.CSSProperties {
   switch (pos) {
@@ -66,39 +51,14 @@ export function ModalAdapterTopLayer<TResult>({
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const uniqueId = useId().replace(/:/g, '');
   const isTopModal = useIsTopModal(id, dialogRef);
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  // Reduced motion fast-track removal
-  useEffect(() => {
-    if (status === 'closing') {
-      if (prefersReducedMotion) {
-        const dialog = dialogRef.current;
-        if (dialog && dialog.open) {
-          dialog.close();
-        }
-        remove();
-      }
+  const finishExit = useCallback(() => {
+    const dialog = dialogRef.current;
+    if (dialog && dialog.open) {
+      dialog.close();
     }
-  }, [status, prefersReducedMotion, remove]);
-
-  // Closing fallback: guarantee removal even when a consumer style suppresses
-  // the exit animation so no animationend ever fires.
-  useEffect(() => {
-    if (status !== 'closing' || prefersReducedMotion) {
-      return;
-    }
-    const delay = getCloseFallbackDelayMs(getCloseAnimationDurationMs(dialogRef.current));
-    const timer = window.setTimeout(() => {
-      const dialog = dialogRef.current;
-      if (dialog && dialog.open) {
-        dialog.close();
-      }
-      remove();
-    }, delay);
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [status, prefersReducedMotion, remove]);
+    remove();
+  }, [remove]);
+  const { prefersReducedMotion, handleAnimationEnd } = useModalExit(dialogRef, status, finishExit);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -111,7 +71,7 @@ export function ModalAdapterTopLayer<TResult>({
     }
 
     if (autoFocus) {
-      const focusable = getFirstFocusableElement(dialog) ?? dialog;
+      const focusable = getFocusableElements(dialog)[0] ?? dialog;
       focusable.focus();
     }
 
@@ -157,16 +117,6 @@ export function ModalAdapterTopLayer<TResult>({
       dialog.removeEventListener('click', handleClick);
     };
   }, [close, dismissible, isTopModal, onDismiss, status]);
-
-  const handleAnimationEnd = useCallback((e: React.AnimationEvent) => {
-    if (status === 'closing' && e.target === e.currentTarget) {
-      const dialog = dialogRef.current;
-      if (dialog && dialog.open) {
-        dialog.close();
-      }
-      remove();
-    }
-  }, [status, remove]);
 
   const isClosing = status === 'closing';
   const animationDuration = prefersReducedMotion ? '0s' : '0.2s';

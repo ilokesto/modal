@@ -301,13 +301,19 @@ src/
     ModalAdapterTopLayer.tsx
   components/
     ModalProvider.tsx
+  core/
+    createModalStackRuntime.ts
   facade/
     modalFacade.ts
   hooks/
     useIsTopModal.ts
     useModal.ts
+    useModalExit.ts
     usePrefersReducedMotion.ts
   shared/
+    ModalStackRuntimeContext.ts
+    animationDuration.ts
+    getFocusableElements.ts
     lifecycle.ts
     styles.ts
     types.ts
@@ -327,15 +333,34 @@ src/
 **`src/facade`** — 모듈 레벨 API:
 - `modalFacade.ts` — `modal` facade와 `globalModalStore`
 
+**`src/core`** — provider별 stack 상태:
+- `createModalStackRuntime.ts` — token 기반 등록, 순서, 최상단 판정, 버전 알림과 target 소속 확인; React import 없음
+
 **`src/hooks`** — React 훅:
 - `useModal.ts` — 명령형 API (`display`, `close`, `closeAll`, `reject`, `remove`, `clear`)
-- `useIsTopModal.ts` — z-index, dismiss, focus 관리를 위한 provider-scoped modal stack 추적
+- `useIsTopModal.ts` — provider의 stack runtime에 등록하고 변경을 구독
+- `useModalExit.ts` — reduced-motion 제거, 종료 animation guard와 fallback timer 정리
 - `usePrefersReducedMotion.ts` — 레거시 fallback 포함 `prefers-reduced-motion` 감지
 
 **`src/shared`** — 내부:
+- `ModalStackRuntimeContext.ts` — provider와 stack hook을 연결하는 React context
+- `getFocusableElements.ts` — 공통 focus 후보 selector, 필터와 DOM 순서
+- `animationDuration.ts` — 기존 inline animation duration 및 fallback 지연 규칙
 - `lifecycle.ts` — `createModalLifecycleStore`로 `OverlayStoreApi`를 래핑하여 `onModalClose` 주입
 - `styles.ts` — 공용 fade/scale animation keyframes
 - `types.ts` — modal props, render callback, adapter props, position contract
+
+### 모달 동작 읽는 순서
+
+소유권은 `ModalProvider`, stack 변경은 `createModalStackRuntime`, React 구독은
+`useIsTopModal` 순서로 읽으면 됩니다. Inline adapter에는 scroll lock, focus trap,
+document 이벤트 정책이 남고, top-layer에는 `showModal`, native cancel과 backdrop
+좌표 판정이 남습니다.
+
+닫기 완료 시점은 두 adapter가 `useModalExit`을 공유합니다. Inline은 `remove`를
+전달하고, top-layer는 native dialog를 먼저 닫은 뒤 `remove`합니다. 공통 타이밍을
+사용해도 transport별 focus·dismiss 동작은 합치지 않습니다. Markup, 위치 스타일,
+callback 순서와 공개 export는 유지합니다.
 
 ## Exports
 
