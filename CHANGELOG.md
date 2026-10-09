@@ -1,5 +1,16 @@
 # @ilokesto/modal
 
+## 2.0.1
+
+### Patch Changes
+
+- cbc4556: Separate provider-local stack state from React subscriptions and share adapter
+  exit timing and focus candidate lookup without changing modal behavior or markup.
+- 24a07be: Exclude hidden, inert, CSS-hidden, disabled, and negative-tabindex controls from modal autofocus and inline Tab-wrap candidates while preserving DOM order and native dialog focus behavior.
+- Updated dependencies [6b429a4]
+- Updated dependencies [a921e3f]
+  - @ilokesto/overlay@2.0.1
+
 ## 2.0.0
 
 ### Major Changes
