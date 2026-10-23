@@ -9,7 +9,7 @@ A React modal package built on top of `@ilokesto/overlay`, following Grunfeld's 
 ## Documentation
 
 - Full docs: [English](https://ilokesto.ayden94.com/en/modal) · [한국어](https://ilokesto.ayden94.com/ko/modal)
-- Source: [packages/modal](https://github.com/ilokesto/ilokesto/tree/main/packages/modal)
+- Source: [ilokesto/modal](https://github.com/ilokesto/modal/tree/main)
 - npm: [@ilokesto/modal](https://www.npmjs.com/package/@ilokesto/modal)
 
 ## Features

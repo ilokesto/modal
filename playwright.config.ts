@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: ['**/*.e2e.ts', '**/*.a11y.ts'],
   timeout: 30_000,
+  workers: 2,
   expect: {
     timeout: 5_000,
   },

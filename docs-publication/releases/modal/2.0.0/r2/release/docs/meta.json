@@ -1,0 +1,15 @@
+{
+  "title": "Modal",
+  "root": true,
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "quick-start",
+    "core-concepts",
+    "---Guides---",
+    "practical-guide",
+    "---Reference---",
+    "api-reference",
+    "troubleshooting"
+  ]
+}

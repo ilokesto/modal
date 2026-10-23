@@ -1,0 +1,77 @@
+---
+title: "빠른 시작"
+description: "Modal을 설치하고 provider를 마운트한 뒤 접근 가능한 확인 흐름의 결과를 기다립니다."
+---
+
+# 빠른 시작
+
+확인 대화상자의 결과를 다른 비동기 작업처럼 `await`하는 흐름을 만듭니다.
+
+## 1. 설치
+
+`react`와 `react-dom`은 피어 의존성이며 React 18과 19를 지원합니다.
+
+```package-install
+@ilokesto/modal react react-dom
+```
+
+스타일시트를 가져올 필요가 없습니다. `ModalProvider`가 패키지의 모션 스타일을 한 번 주입하며, 대화상자 콘텐츠의 스타일은 사용자가 직접 작성합니다.
+
+## 2. 프로바이더와 확인 UI 추가
+
+아래는 완전한 `App.tsx` 예제입니다.
+
+```tsx lineNumbers
+import { ModalProvider, useModal } from '@ilokesto/modal';
+
+function DeleteButton() {
+  const { display } = useModal();
+
+  async function handleDelete() {
+    const confirmed = await display<boolean>({
+      id: 'delete-project',
+      ariaLabelledBy: 'delete-project-title',
+      ariaDescribedBy: 'delete-project-description',
+      render: (close) => (
+        <section
+          style={{
+            width: 360,
+            maxWidth: 'calc(100vw - 32px)',
+            padding: 24,
+            borderRadius: 16,
+            background: '#fff',
+            color: '#111827',
+          }}
+        >
+          <h2 id="delete-project-title">프로젝트를 삭제할까요?</h2>
+          <p id="delete-project-description">이 작업은 되돌릴 수 없습니다.</p>
+          <button onClick={() => close(false)}>취소</button>
+          <button onClick={() => close(true)}>삭제</button>
+        </section>
+      ),
+    });
+
+    if (confirmed) {
+      console.log('프로젝트 삭제');
+    }
+  }
+
+  return <button onClick={() => void handleDelete()}>프로젝트 삭제</button>;
+}
+
+export default function App() {
+  return (
+    <ModalProvider>
+      <DeleteButton />
+    </ModalProvider>
+  );
+}
+```
+
+## 3. 실행 및 확인
+
+React 애플리케이션을 시작하고 **프로젝트 삭제**를 선택하세요. 대화상자가 포커스를 받고 본문 스크롤이 잠깁니다. **취소**는 `false`, **삭제**는 `true`를 반환합니다. Escape 키나 백드롭을 사용하면 닫을 수 있는 이 모달이 `undefined`를 반환하며 닫힙니다. 종료 모션이 끝나면 포커스가 모달을 연 요소로 돌아갑니다.
+
+화면에 보이는 제목은 `ariaLabelledBy`로 연결했습니다. 접근 가능한 이름을 생략하지 마세요. 보이는 제목이 없을 때만 `ariaLabel`을 사용합니다.
+
+이어서 라이프사이클 시점은 [핵심 개념](/ko/modal/core-concepts), 전송 방식과 스타일 선택은 [실전 가이드](/ko/modal/practical-guide)에서 확인하세요.

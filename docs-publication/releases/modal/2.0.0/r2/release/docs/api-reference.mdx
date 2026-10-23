@@ -1,0 +1,59 @@
+---
+title: "API reference"
+description: "Exact Modal exports, options, defaults, commands, and lifecycle behavior."
+---
+
+# API reference
+
+All public APIs are exported from `@ilokesto/modal`.
+
+## `ModalProvider`
+
+`ModalProvider({ children, store? })` registers the modal adapter. Without `store`, it uses `globalModalStore`. With an `OverlayStoreApi`, it wraps that store with modal close notifications and creates an isolated provider stack.
+
+## `useModal()`
+
+Returns `{ display, close, closeAll, reject, remove, clear }`.
+
+| Command | Result |
+|---|---|
+| `display<TResult>(options)` | Opens and returns `Promise<TResult \| undefined>`; settles on removal. |
+| `close(id, result?)` | Marks one open modal `closing` and records the result. |
+| `closeAll()` | Marks all open modals `closing`; adapters later remove them. |
+| `reject(id, reason?)` | Marks one modal `closing`; its promise rejects on removal. |
+| `remove(id?)` | Immediately removes one id, or the latest item when omitted. |
+| `clear()` | Immediately removes and settles all items. |
+
+## `modal` and `globalModalStore`
+
+`modal` exposes the commands above plus `open(options): string`, which returns an id instead of a promise. It always targets `globalModalStore`. `globalModalStore` is the exported `OverlayStoreApi` used by the default provider.
+
+## Display options
+
+`UseModalOptions<TResult>` and `ModalFacadeOptions<TResult>` combine `id?` with `ModalProps<TResult>`.
+
+| Option | Type | Default |
+|---|---|---|
+| `render` | `(close, context) => ReactNode` | required |
+| `transport` | `'inline' \| 'top-layer'` | `'inline'` |
+| `position` | nine center/edge/corner values | `'center'` |
+| `role` | `'dialog' \| 'alertdialog'` | `'dialog'` |
+| `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy` | `string` | unset |
+| `dismissible` | `boolean` | `true` |
+| `onDismiss` | `() => void` | unset |
+| `onModalClose` | `(result?) => void` | unset |
+| `className`, `backdropClassName` | `string` | unset |
+| `style`, `backdropStyle` | `CSSProperties` | unset |
+| `autoFocus`, `restoreFocus` | `boolean` | `true` |
+
+Positions are `center`, `top`, `bottom`, `left`, `right`, `top-left`, `top-right`, `bottom-left`, and `bottom-right`.
+
+The render context is `{ id, status, isOpen, close }`. The scoped `close` always targets that modal.
+
+## Callback behavior
+
+`onDismiss` runs only for a permitted Escape or backdrop dismissal. `onModalClose` runs once on the first close, reject, direct remove, or clear path. A normal `close(id, result)` invokes it immediately with `result`. `closeAll()` does not notify immediately; later adapter removal invokes it with `undefined`. Direct `remove()` and rejection also report `undefined`.
+
+## Exported types
+
+`ModalProviderProps`, `UseModalOptions`, `ModalFacadeOptions`, `ModalProps`, `ModalAdapterProps`, `ModalPosition`, `ModalClose`, `ModalCloseHandler`, `ModalRender`, and `ModalRenderContext`.

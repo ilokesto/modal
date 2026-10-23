@@ -1,0 +1,63 @@
+---
+title: "Practical guide"
+description: "Apply accessible naming, choose a transport, style content, and use scoped or global commands."
+---
+
+# Practical guide
+
+## Name every dialog
+
+Prefer a visible heading connected by `ariaLabelledBy`; connect explanatory text with `ariaDescribedBy`. If no visible title exists, provide `ariaLabel`. Use `role: 'alertdialog'` only for urgent decisions requiring immediate attention.
+
+```tsx lineNumbers
+await display({
+  role: 'alertdialog',
+  ariaLabelledBy: 'discard-title',
+  ariaDescribedBy: 'discard-description',
+  render: (close) => (
+    <section>
+      <h2 id="discard-title">Discard changes?</h2>
+      <p id="discard-description">Unsaved edits will be lost.</p>
+      <button onClick={() => close(false)}>Keep editing</button>
+      <button onClick={() => close(true)}>Discard</button>
+    </section>
+  ),
+});
+```
+
+The inline adapter traps focus in the top modal, focuses the first control (or panel), restores prior focus, and locks body scroll. Native `<dialog>` handles focus containment in top-layer mode. Set `autoFocus` or `restoreFocus` to `false` only when your application replaces that behavior deliberately.
+
+## Choose a transport
+
+Use the default `transport: 'inline'` for consistent package-controlled positioning, backdrop, and motion. Use `transport: 'top-layer'` when the dialog must escape clipping and stacking contexts:
+
+```tsx
+await display({
+  transport: 'top-layer',
+  ariaLabel: 'Account settings',
+  render: (close) => <SettingsPanel onDone={() => close()} />,
+});
+```
+
+Top-layer transport requires browser support for native `<dialog>` and `showModal()`. It does not include a polyfill.
+
+## Style the panel and backdrop
+
+`className` and `style` target the panel or `<dialog>`. `backdropClassName` and `backdropStyle` target the inline backdrop; top-layer mode applies backdrop styling through its generated `::backdrop` rule. Package motion uses 200 ms fade/scale animations and honors `prefers-reduced-motion` by removing promptly.
+
+## Use scoped and global commands intentionally
+
+Inside the provider, prefer `useModal()` so ownership is visible. The module-level `modal` facade is useful outside React components, but requires one mounted default `<ModalProvider>`:
+
+```tsx
+<ModalProvider><AppRoutes /></ModalProvider>;
+
+const id = modal.open({ ariaLabel: 'Working', render: () => <Progress /> });
+modal.close(id);
+```
+
+For multiple independent providers, pass each a distinct `createOverlayStore()` and use hooks inside its tree; the global facade always targets `globalModalStore`.
+
+## Keep render callbacks pure
+
+Do not call hooks or run side effects inside `render`. Return a component that owns hooks instead: `render: (close) => <EditorDialog onClose={close} />`.

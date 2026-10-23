@@ -1,0 +1,77 @@
+---
+title: "Quick start"
+description: "Install Modal, mount its provider, and await a complete accessible confirmation flow."
+---
+
+# Quick start
+
+Build a confirmation dialog whose result can be awaited like any other asynchronous decision.
+
+## 1. Install
+
+`react` and `react-dom` are peer dependencies. React 18 and 19 are supported.
+
+```package-install
+@ilokesto/modal react react-dom
+```
+
+No stylesheet import is required. `ModalProvider` injects the package motion styles once; you style the dialog content itself.
+
+## 2. Add the provider and confirmation UI
+
+The following is a complete `App.tsx` example.
+
+```tsx lineNumbers
+import { ModalProvider, useModal } from '@ilokesto/modal';
+
+function DeleteButton() {
+  const { display } = useModal();
+
+  async function handleDelete() {
+    const confirmed = await display<boolean>({
+      id: 'delete-project',
+      ariaLabelledBy: 'delete-project-title',
+      ariaDescribedBy: 'delete-project-description',
+      render: (close) => (
+        <section
+          style={{
+            width: 360,
+            maxWidth: 'calc(100vw - 32px)',
+            padding: 24,
+            borderRadius: 16,
+            background: '#fff',
+            color: '#111827',
+          }}
+        >
+          <h2 id="delete-project-title">Delete project?</h2>
+          <p id="delete-project-description">This action cannot be undone.</p>
+          <button onClick={() => close(false)}>Cancel</button>
+          <button onClick={() => close(true)}>Delete</button>
+        </section>
+      ),
+    });
+
+    if (confirmed) {
+      console.log('Delete the project');
+    }
+  }
+
+  return <button onClick={() => void handleDelete()}>Delete project</button>;
+}
+
+export default function App() {
+  return (
+    <ModalProvider>
+      <DeleteButton />
+    </ModalProvider>
+  );
+}
+```
+
+## 3. Run and verify
+
+Start your React application and select **Delete project**. The dialog receives focus and body scrolling is locked. **Cancel** resolves `false`; **Delete** resolves `true`. Escape and the backdrop also close this dismissible modal with `undefined`. Focus returns to the trigger after the exit motion.
+
+The visible heading is connected through `ariaLabelledBy`. Do not omit the accessible name; use `ariaLabel` only when no visible heading exists.
+
+Next, read [Core concepts](/en/modal/core-concepts) for lifecycle timing or [Practical guide](/en/modal/practical-guide) for transport and styling choices.

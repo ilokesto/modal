@@ -1,0 +1,19 @@
+{
+  "name": "@ilokesto/modal-docs-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./modal-demo": "./.generated/modal/modal-demo.tsx"
+  },
+  "dependencies": {
+    "@ilokesto/released-modal": "npm:@ilokesto/modal@2.0.0",
+    "@ilokesto/released-overlay": "npm:@ilokesto/overlay@2.0.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4"
+  }
+}

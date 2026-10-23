@@ -10,12 +10,26 @@
     "test:e2e": "playwright test modal.e2e.ts",
     "test:a11y": "playwright test modal.a11y.ts",
     "test:pack": "pnpm run build && publint && attw --pack . --profile esm-only && node scripts/validate-package.mjs",
-    "test:ci": "pnpm test && pnpm test:e2e && pnpm test:a11y && pnpm test:pack"
+    "test:tooling": "node --test --test-concurrency=1 tests/tooling/*.test.mjs",
+    "test:ci": "pnpm test && pnpm test:e2e && pnpm test:a11y && pnpm test:pack",
+    "docs:prepare": "pnpm build",
+    "docs:dev": "pnpm docs:prepare && pnpm --dir website dev",
+    "docs:build": "pnpm docs:prepare && pnpm --dir website build",
+    "docs:typecheck": "pnpm docs:prepare && pnpm --dir website typecheck",
+    "docs:test": "pnpm --dir website test",
+    "docs:start": "pnpm --dir website start",
+    "docs:publication:verify": "node scripts/docs-publication.mjs verify && node scripts/docs-runtime.mjs verify",
+    "docs:publication:capture": "node scripts/docs-publication.mjs capture",
+    "docs:publication:promote": "node scripts/docs-publication.mjs promote",
+    "migrate:verify": "node scripts/verify-migration.mjs",
+    "release:verify": "node scripts/release-verify.mjs",
+    "changeset": "changeset",
+    "changeset:status": "changeset status",
+    "version-packages": "changeset version && pnpm install --lockfile-only"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ilokesto/ilokesto.git",
-    "directory": "packages/modal"
+    "url": "git+https://github.com/ilokesto/modal.git"
   },
   "homepage": "https://ilokesto.ayden94.com/en/modal",
   "sideEffects": false,
@@ -42,14 +56,20 @@
   "author": "Jeong Jinho <wpfekdml@me.com>",
   "license": "MIT",
   "dependencies": {
-    "@ilokesto/overlay": "workspace:^2.0.1"
+    "@ilokesto/overlay": "^2.0.1"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
     "react-dom": "^18.0.0 || ^19.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "mdast-util-to-markdown": "2.1.2"
+    }
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.4",
+    "@changesets/cli": "^2.31.1",
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.6.3",
@@ -66,6 +86,8 @@
     "tsup": "^8.5.1",
     "typescript": "^6.0.2",
     "vite": "^7.3.3",
-    "vitest": "^4.1.10"
-  }
+    "vitest": "^4.1.10",
+    "yaml": "^2.8.2"
+  },
+  "packageManager": "pnpm@10.17.1"
 }

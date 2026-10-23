@@ -1,0 +1,38 @@
+---
+title: "Troubleshooting"
+description: "Fix provider, pending promise, focus, stacking, styling, and native dialog issues."
+---
+
+# Troubleshooting
+
+## `useModal` throws a provider error
+
+Call it below `<ModalProvider>`. The provider both supplies overlay context and renders the host.
+
+## The global facade opens nothing
+
+Mount exactly one `<ModalProvider>` without a custom store before calling `modal.display` or `modal.open`. A provider with a custom store is isolated from `globalModalStore`.
+
+## A result promise appears delayed
+
+This is expected: `close(result)` starts the closing phase and the promise settles after the adapter removes the modal following exit motion. Use `remove(id)` only when you intentionally want immediate removal.
+
+## The dialog has no accessible name
+
+Add a visible heading with an id and pass `ariaLabelledBy`, or pass `ariaLabel` when there is no visible heading. Text rendered inside the panel is not connected automatically.
+
+## Escape or backdrop does not close a modal
+
+Only the top modal responds, and `dismissible={false}` blocks both routes. `onDismiss` observes light dismissal; it does not itself close the modal.
+
+## Styling removes the exit animation
+
+The adapter has a fallback based on the computed animation duration so the modal is still removed. If custom CSS changes motion, ensure it does not leave unexpected long durations. Reduced-motion users bypass the wait.
+
+## `top-layer` fails in an older browser or test DOM
+
+That transport calls native `<dialog>.showModal()`. Use `inline`, provide an environment polyfill in tests, or target browsers with dialog support.
+
+## Two app areas interfere with each other
+
+Do not mount multiple default providers. Create distinct stores with `createOverlayStore()` from `@ilokesto/overlay`, pass them to separate providers, and use `useModal()` in each subtree.
