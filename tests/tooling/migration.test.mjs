@@ -78,6 +78,9 @@ test('history: missing original Grunfeld master in disposable clone -> rejected'
   t.after(() => rm(parent, { recursive: true, force: true }));
   const root = path.join(parent, 'clone');
   git(repository, ['clone', '--no-local', '--quiet', repository, root]);
+  git(root, ['fetch', '--quiet', repository,
+    'refs/remotes/origin/legacy/*:refs/remotes/origin/legacy/*']);
+  await verifyHistory(root, manifest);
   const archive = 'refs/remotes/origin/legacy/grunfeld/heads/master';
   assert.match(git(root, ['rev-parse', '--verify', archive]).toString(), /^[0-9a-f]{40}\n$/);
 
