@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
+  // Keep browser reporting from modifying the migration history checkout.
+  captureGitInfo: { diff: false },
   testDir: './e2e',
   testMatch: ['**/*.e2e.ts', '**/*.a11y.ts'],
   timeout: 30_000,
