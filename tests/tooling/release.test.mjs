@@ -122,6 +122,17 @@ test('release verification: real pack and exact downloaded artifact -> read-only
   assert.equal(fixture.state.mainReads, 2);
 });
 
+test('packRelease: real pnpm pack -> normalized gzip bytes match saved archive and digest', async t => {
+  const destination = await mkdtemp(path.join(os.tmpdir(), 'modal-pack-release-test-'));
+  t.after(() => rm(destination, { recursive: true, force: true }));
+  const packed = await packRelease(rootDir, destination);
+  const saved = await readFile(path.join(destination, packed.file));
+
+  assert.equal(packed.bytes[9], 3);
+  assert.deepEqual(packed.bytes, saved);
+  assert.equal(packed.packSha256, hash(saved));
+});
+
 test('release verification: main advances after packing -> no stale eligibility', async t => {
   const fixture = await releaseFixture(t);
   fixture.state.advance = true;
