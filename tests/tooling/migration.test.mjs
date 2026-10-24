@@ -49,7 +49,7 @@ test('checkpoint: future development commit and new version -> immutable history
   const parent = await mkdtemp(path.join(os.tmpdir(), 'modal-future-'));
   t.after(() => rm(parent, { recursive: true, force: true }));
   const root = path.join(parent, 'clone');
-  git(repository, ['clone', '--no-local', '--quiet', repository, root]);
+  git(repository, ['clone', '--local', '--no-hardlinks', '--quiet', repository, root]);
   // The standalone tree is delivered as an uncommitted working copy; a bare clone
   // only sees the pre-migration baseline. Overlay the current files (disposable
   // fixture) so the future-development commit builds on the standalone state.
@@ -77,7 +77,7 @@ test('history: missing original Grunfeld master in disposable clone -> rejected'
   const parent = await mkdtemp(path.join(os.tmpdir(), 'modal-archive-'));
   t.after(() => rm(parent, { recursive: true, force: true }));
   const root = path.join(parent, 'clone');
-  git(repository, ['clone', '--no-local', '--quiet', repository, root]);
+  git(repository, ['clone', '--local', '--no-hardlinks', '--quiet', repository, root]);
   git(root, ['fetch', '--quiet', repository,
     'refs/remotes/origin/legacy/*:refs/remotes/origin/legacy/*']);
   await verifyHistory(root, manifest);
