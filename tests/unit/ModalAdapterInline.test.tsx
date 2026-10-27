@@ -2,9 +2,9 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
-import type { ModalAdapterProps } from '../src/shared/types';
-import { ModalAdapterInline } from '../src/adapters/ModalAdapterInline';
-import { renderWithModalStack } from './modalStackTestUtils';
+import type { ModalAdapterProps } from '../../src/shared/types';
+import { ModalAdapterInline } from '../../src/adapters/ModalAdapterInline';
+import { renderWithModalStack } from '../fixtures/modalStackTestUtils';
 
 function renderInline(props: Partial<ModalAdapterProps<unknown>> = {}) {
   const close = vi.fn();

@@ -64,14 +64,13 @@ Use Node 24.22.1 and pnpm 10.17.1 from this repository root.
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build
+pnpm exec playwright install chromium
 pnpm typecheck
 pnpm test
-pnpm test:tooling
-pnpm test:pack
-pnpm test:e2e
-pnpm test:a11y
 ```
+
+`pnpm test` builds once and runs unit tests (`test:unit`), tooling (`test:tooling`), package validation (`test:pack`), and browser checks (`test:browser:e2e` and `test:browser:a11y` through `test:browser`). Standalone package validation requires a prior build. Tests live in `tests/unit`, `tests/tooling`, and `tests/browser`; helpers and apps live in `tests/fixtures`.
+
 
 Mount only one default provider without `store`: defaults share `globalModalStore`. For simultaneous providers, pass each a distinct overlay store and use hooks in its tree. The global `modal` facade always targets the global store.
 

@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createOverlayStore } from '@ilokesto/overlay';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { ModalProvider } from '../src/components/ModalProvider';
+import { ModalProvider } from '../../src/components/ModalProvider';
 
 describe('ModalProvider', () => {
   afterEach(() => {
