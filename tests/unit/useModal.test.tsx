@@ -4,9 +4,9 @@ import { useState } from 'react';
 import type React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor } from '@testing-library/react';
-import { ModalProvider } from '../src/components/ModalProvider';
-import { modal } from '../src/facade/modalFacade';
-import { useModal } from '../src/hooks/useModal';
+import { ModalProvider } from '../../src/components/ModalProvider';
+import { modal } from '../../src/facade/modalFacade';
+import { useModal } from '../../src/hooks/useModal';
 
 function ModalContent({ close }: { close: (result?: boolean) => void }) {
   return (

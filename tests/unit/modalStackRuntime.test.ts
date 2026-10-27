@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createModalStackRuntime } from '../src/core/createModalStackRuntime';
+import { createModalStackRuntime } from '../../src/core/createModalStackRuntime';
 
 describe('modal stack runtime', () => {
   it('keeps duplicate IDs ordered by token when a non-top entry unregisters', () => {

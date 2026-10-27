@@ -2,8 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
-import { ModalAdapterTopLayer } from '../src/adapters/ModalAdapterTopLayer';
-import { renderWithModalStack } from './modalStackTestUtils';
+import { ModalAdapterTopLayer } from '../../src/adapters/ModalAdapterTopLayer';
+import { renderWithModalStack } from '../fixtures/modalStackTestUtils';
 
 describe('ModalAdapterTopLayer', () => {
   afterEach(() => {

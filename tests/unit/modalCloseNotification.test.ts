@@ -1,6 +1,6 @@
 import { createOverlayStore } from '@ilokesto/overlay';
 import { describe, expect, it, vi } from 'vitest';
-import { createModalLifecycleStore } from '../src/shared/lifecycle';
+import { createModalLifecycleStore } from '../../src/shared/lifecycle';
 
 describe('createModalLifecycleStore onModalClose deduplication', () => {
   it('scopes notification state per store so distinct providers fire callbacks independently', () => {

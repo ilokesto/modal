@@ -2,9 +2,9 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
-import { ModalAdapterInline } from '../src/adapters/ModalAdapterInline';
-import { ModalAdapterTopLayer } from '../src/adapters/ModalAdapterTopLayer';
-import { renderWithModalStack } from './modalStackTestUtils';
+import { ModalAdapterInline } from '../../src/adapters/ModalAdapterInline';
+import { ModalAdapterTopLayer } from '../../src/adapters/ModalAdapterTopLayer';
+import { renderWithModalStack } from '../fixtures/modalStackTestUtils';
 
 describe('modal closing fallback', () => {
   afterEach(() => {

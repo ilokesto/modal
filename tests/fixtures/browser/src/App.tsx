@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createOverlayStore } from '@ilokesto/overlay';
-import { ModalProvider, useModal } from '../../../src';
+import { ModalProvider, useModal } from '../../../../src';
 
 const firstProviderStore = createOverlayStore();
 const secondProviderStore = createOverlayStore();

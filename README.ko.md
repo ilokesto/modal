@@ -64,14 +64,13 @@ export function App() {
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build
+pnpm exec playwright install chromium
 pnpm typecheck
 pnpm test
-pnpm test:tooling
-pnpm test:pack
-pnpm test:e2e
-pnpm test:a11y
 ```
+
+`pnpm test` builds once and runs unit tests (`test:unit`), tooling (`test:tooling`), package validation (`test:pack`), and browser checks (`test:browser:e2e` and `test:browser:a11y` through `test:browser`). Standalone package validation requires a prior build. Tests live in `tests/unit`, `tests/tooling`, and `tests/browser`; helpers and apps live in `tests/fixtures`.
+
 
 `store` 없는 기본 provider는 하나만 마운트하세요. 기본 provider는 `globalModalStore`를 공유합니다. 여러 provider를 동시에 쓴다면 각각 별도 overlay store를 전달하고 해당 트리의 hook을 사용하세요. 글로벌 `modal` facade는 항상 global store를 대상으로 합니다.
 

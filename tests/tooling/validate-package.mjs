@@ -22,9 +22,9 @@ for (const file of requiredFiles) {
   }
 }
 
-await import('../dist/index.js');
+await import('../../dist/index.js');
 
-const packageJson = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+const packageJson = JSON.parse(await readFile(new URL('../../package.json', import.meta.url), 'utf8'));
 
 if (packageJson.exports?.['.']?.import !== './dist/index.js') {
   throw new Error('Unexpected root import export path.');

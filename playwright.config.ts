@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   // Keep browser reporting from modifying the migration history checkout.
   captureGitInfo: { diff: false },
-  testDir: './e2e',
+  testDir: './tests/browser',
   testMatch: ['**/*.e2e.ts', '**/*.a11y.ts'],
   timeout: 30_000,
   workers: 2,
@@ -15,7 +15,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm exec vite --config e2e/vite.config.ts --host 127.0.0.1 --port 4173',
+    command: 'pnpm exec vite --config tests/browser/vite.config.ts --host 127.0.0.1 --port 4173',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: !process.env.CI,
   },

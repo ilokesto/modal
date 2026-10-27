@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './test/setup.ts',
-    include: ['test/**/*.test.{ts,tsx}'],
+    setupFiles: './tests/fixtures/setup.ts',
+    include: ['tests/unit/**/*.test.{ts,tsx}'],
     maxWorkers: 2,
   },
 });

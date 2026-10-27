@@ -5,7 +5,7 @@ import { createOverlayStore } from '@ilokesto/overlay';
 import type { OverlayStoreApi } from '@ilokesto/overlay';
 import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { ModalProvider } from '../src/components/ModalProvider';
+import { ModalProvider } from '../../src/components/ModalProvider';
 
 interface ModalFixture {
   readonly id: string;
