@@ -4,7 +4,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40ilokesto%2Fmodal?style=flat&color=555)](https://www.npmjs.com/package/@ilokesto/modal)
 
-[문서](https://ilokesto.ayden94.com/ko/modal) | [API](./docs/api-reference.ko.mdx) | [English](./README.md)
+[English](./README.md)
 
 - `useModal()` 또는 `modal` facade로 typed 결과를 기다립니다.
 - 기본 inline과 네이티브 `<dialog>` top-layer transport를 지원합니다.
@@ -57,14 +57,6 @@ export function App() {
 
 항상 접근 가능한 이름을 제공하고 설명 ID를 실제 요소에 연결하세요. `render`는 순수하게 유지하고 hook이 필요하면 별도 컴포넌트를 반환하세요. 결과는 exit 후 제거될 때 정산됩니다. `onDismiss`는 Escape/backdrop 전용이고, `onModalClose`는 모든 닫기 경로를 다룹니다.
 
-## 더 알아보기
-
-- [시작 가이드](./docs/quick-start.ko.mdx)
-- [Provider와 수명주기 모델](./docs/core-concepts.ko.mdx)
-- [접근성, transport, 스타일과 facade](./docs/practical-guide.ko.mdx)
-- [옵션, callback 순서와 reject](./docs/api-reference.ko.mdx)
-- [Focus와 닫기 문제 해결](./docs/troubleshooting.ko.mdx)
-
 <details>
 <summary>개발</summary>
 
@@ -79,10 +71,6 @@ pnpm test:tooling
 pnpm test:pack
 pnpm test:e2e
 pnpm test:a11y
-pnpm docs:publication:verify
-pnpm docs:typecheck
-pnpm docs:build
-pnpm docs:test
 ```
 
 `store` 없는 기본 provider는 하나만 마운트하세요. 기본 provider는 `globalModalStore`를 공유합니다. 여러 provider를 동시에 쓴다면 각각 별도 overlay store를 전달하고 해당 트리의 hook을 사용하세요. 글로벌 `modal` facade는 항상 global store를 대상으로 합니다.
@@ -93,10 +81,6 @@ pnpm docs:test
 
 Top-layer는 네이티브 `<dialog>`와 `showModal()`이 필요하며 polyfill을 포함하지 않습니다.
 
-브라우저 테스트는 Playwright를 사용합니다. 준비: `pnpm exec playwright install chromium`. 문서: `pnpm docs:start`.
-
-`docs/`는 한영 원본, `website/`는 렌더러입니다. 다른 ilokesto 패키지는 레지스트리 의존성이며 sibling checkout은 필요하지 않습니다.
-
-라이선스: MIT.
+브라우저 테스트는 Playwright를 사용합니다. 준비: `pnpm exec playwright install chromium`. 라이선스: MIT.
 
 </details>

@@ -4,7 +4,7 @@ Awaitable React modals with focus management and default motion, built on `@ilok
 
 [![npm version](https://img.shields.io/npm/v/%40ilokesto%2Fmodal?style=flat&color=555)](https://www.npmjs.com/package/@ilokesto/modal)
 
-[Docs](https://ilokesto.ayden94.com/en/modal) | [API](./docs/api-reference.mdx) | [한국어](./README.ko.md)
+[한국어](./README.ko.md)
 
 - Await typed results through `useModal()` or the `modal` facade.
 - Choose default inline rendering or native `<dialog>` top-layer transport.
@@ -57,14 +57,6 @@ export function App() {
 
 Always provide an accessible name and connect description ids to real elements. Keep `render` pure; return a separate component when hooks are needed. Results settle on removal after exit. `onDismiss` covers Escape/backdrop only; `onModalClose` covers all close paths.
 
-## Further reading
-
-- [Quick-start walkthrough](./docs/quick-start.mdx)
-- [Provider and lifecycle model](./docs/core-concepts.mdx)
-- [Accessibility, transports, styling, and facade](./docs/practical-guide.mdx)
-- [Options, callback timing, and rejection](./docs/api-reference.mdx)
-- [Focus and closing troubleshooting](./docs/troubleshooting.mdx)
-
 <details>
 <summary>Development</summary>
 
@@ -79,10 +71,6 @@ pnpm test:tooling
 pnpm test:pack
 pnpm test:e2e
 pnpm test:a11y
-pnpm docs:publication:verify
-pnpm docs:typecheck
-pnpm docs:build
-pnpm docs:test
 ```
 
 Mount only one default provider without `store`: defaults share `globalModalStore`. For simultaneous providers, pass each a distinct overlay store and use hooks in its tree. The global `modal` facade always targets the global store.
@@ -93,10 +81,6 @@ Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both ada
 
 Top-layer requires native `<dialog>` and `showModal()` support; no polyfill is included.
 
-Browser tests use Playwright. Setup: `pnpm exec playwright install chromium`. Docs: `pnpm docs:start`.
-
-`docs/` holds bilingual originals; `website/` renders them. Other ilokesto packages are registry dependencies; no sibling checkout is required.
-
-License: MIT.
+Browser tests use Playwright. Setup: `pnpm exec playwright install chromium`. License: MIT.
 
 </details>
