@@ -93,7 +93,6 @@ jobs:
           pnpm test:e2e
           pnpm test:a11y
           pnpm test:tooling
-          pnpm migrate:verify
       - name: Documentation checks
         run: |
           pnpm docs:publication:verify

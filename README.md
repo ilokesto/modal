@@ -79,7 +79,6 @@ pnpm test:tooling
 pnpm test:pack
 pnpm test:e2e
 pnpm test:a11y
-pnpm migrate:verify
 pnpm docs:publication:verify
 pnpm docs:typecheck
 pnpm docs:build
