@@ -13,6 +13,10 @@ Use Node 24.22.1 and pnpm 10.17.1. Run commands from this root.
   `test:pack`, and `test:browser` (the `test:browser:e2e` and
   `test:browser:a11y` suites). Standalone `test:pack` requires `pnpm build` first.
 - Consumer-facing changes need a root Changeset.
+- Follow [JSDOC.md](./JSDOC.md) for English runtime API documentation, including
+  facade methods, owned nested parameter fields and finite return members.
+  Run `pnpm lint:jsdoc`; `pnpm test:tooling` enforces the semantic contract and fixtures.
+  Preserve JSDoc in emitted declarations.
 - `release:verify --sha <full-SHA>` is read-only. Main merges maintain the Changesets release PR; merging
   it publishes only the exact successful Verify artifact through GitHub Actions with the
   latest dist-tag. Never publish locally.

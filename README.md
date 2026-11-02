@@ -62,6 +62,8 @@ Always provide an accessible name and connect description ids to real elements. 
 
 Use Node 24.22.1 and pnpm 10.17.1 from this repository root.
 
+Follow the [runtime JSDoc contract](./JSDOC.md) when contributing API documentation. Run `pnpm lint:jsdoc`; the same semantic check runs in `test:tooling` and CI.
+
 ```bash
 pnpm install --frozen-lockfile
 pnpm exec playwright install chromium

@@ -26,6 +26,34 @@ function cssPropertiesToString(style: React.CSSProperties): string {
   }).join(' ');
 }
 
+/**
+ * @description Renders a native modal dialog with browser top-layer containment and provider-local dismissal. Requires showModal support; closes the dialog after exit.
+ * @param {ModalAdapterProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
+ * @param {'inline' | 'top-layer'} [props.transport] - Router selection hint; this adapter itself always renders a native dialog.
+ * @param {ModalPosition} [props.position] - Panel position; defaults to center.
+ * @param {'dialog' | 'alertdialog'} [props.role] - Accessible dialog role; defaults to dialog.
+ * @param {string} [props.ariaLabel] - Accessible name when no labelled-by element is supplied.
+ * @param {string} [props.ariaLabelledBy] - Space-separated IDs of mounted elements naming the dialog.
+ * @param {string} [props.ariaDescribedBy] - Space-separated IDs of mounted elements describing the dialog.
+ * @param {boolean} [props.dismissible] - Whether top-modal Escape and backdrop interactions close the modal; defaults to true.
+ * @param {() => void} [props.onDismiss] - Callback for Escape or backdrop dismissal, before closing.
+ * @param {ModalCloseHandler<TResult>} [props.onModalClose] - Once-per-modal close notification, including programmatic close paths.
+ * @param {string} [props.className] - Panel class names.
+ * @param {React.CSSProperties} [props.style] - Panel inline styles overriding default motion and positioning styles.
+ * @param {string} [props.backdropClassName] - Backdrop class names; top-layer attaches these to the dialog.
+ * @param {React.CSSProperties} [props.backdropStyle] - Backdrop styles; top-layer serializes these into a scoped backdrop rule.
+ * @param {boolean} [props.autoFocus] - Whether the adapter explicitly focuses the first eligible descendant; defaults to true. Native dialog focus may still move when false.
+ * @param {boolean} [props.restoreFocus] - Whether to restore the previous connected focus target on unmount; defaults to true.
+ * @param {ModalRender<TResult>} props.render - Pure content renderer receiving a scoped close callback and modal context.
+ * @returns {React.JSX.Element} Mounted modal transport and its rendered content.
+ * @example
+ * ```tsx
+ * <ModalProvider>
+ *   <ModalAdapterTopLayer {...overlayProps} ariaLabel="Confirm"
+ *     render={close => <button onClick={() => close(true)}>Confirm</button>} />
+ * </ModalProvider>
+ * ```
+ */
 export function ModalAdapterTopLayer<TResult>({
   id,
   isOpen,
