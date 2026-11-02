@@ -7,7 +7,16 @@ const focusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-/** Preserves the adapters' shared focus candidate policy and DOM order. */
+/**
+ * @description Returns focus candidates in DOM order, excluding disabled, hidden and inert descendants while respecting a native modal dialog's inherited inertness boundary.
+ * @param {HTMLElement} container - Mounted adapter panel whose descendants are inspected.
+ * @returns {HTMLElement[]} Eligible descendants in DOM order; the container itself is not included.
+ * @example
+ * ```ts
+ * const first = getFocusableElements(panel)[0] ?? panel;
+ * first.focus();
+ * ```
+ */
 export function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return [...container.querySelectorAll<HTMLElement>(focusableSelector)].filter((element) => {
     if (element.tabIndex < 0 || element.matches(':disabled, input[type="hidden"]')) {

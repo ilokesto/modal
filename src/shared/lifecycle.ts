@@ -9,6 +9,18 @@ function getModalCloseHandler(item: OverlayItem): ModalCloseHandler<unknown> | u
     : undefined;
 }
 
+/**
+ * @description Wraps an overlay store with once-per-modal close notifications while preserving overlay settlement and subscription behavior. Close and reject notify immediately; remove and clear notify any remaining modal callbacks.
+ * @param {OverlayStoreApi} store - Underlying overlay store whose operations and snapshots are delegated.
+ * @returns {OverlayStoreApi} A lifecycle-aware store with the external overlay API unchanged.
+ * @example
+ * ```ts
+ * const store = createModalLifecycleStore(createOverlayStore());
+ * const request = store.open({ type: "modal", props: { onModalClose: result => save(result) } });
+ * store.close(request.id, true);
+ * store.remove(request.id);
+ * ```
+ */
 export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreApi {
   const notifiedModalIds = new Set<string>();
 

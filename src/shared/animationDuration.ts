@@ -10,6 +10,16 @@ function parseDurationToken(token: string): number | null {
   return match[2] === 's' ? value * 1000 : value;
 }
 
+/**
+ * @description Reads the first supported inline animation duration in milliseconds. Missing elements or declarations use the 200 ms default; a shorthand with no duration yields zero. Computed styles are not consulted.
+ * @param {HTMLElement | null} element - Closing panel, or null before mounting.
+ * @returns {number} Inline animation duration in milliseconds or the documented fallback.
+ * @example
+ * ```ts
+ * panel.style.animationDuration = "0.3s";
+ * const durationMs = getCloseAnimationDurationMs(panel); // 300
+ * ```
+ */
 export function getCloseAnimationDurationMs(element: HTMLElement | null): number {
   if (!element) {
     return DEFAULT_CLOSE_ANIMATION_MS;
@@ -34,6 +44,15 @@ export function getCloseAnimationDurationMs(element: HTMLElement | null): number
   return DEFAULT_CLOSE_ANIMATION_MS;
 }
 
+/**
+ * @description Adds a 50 ms safety buffer to a positive animation duration; nonpositive durations exit without delay.
+ * @param {number} durationMs - Animation duration in milliseconds.
+ * @returns {number} Fallback timeout delay in milliseconds.
+ * @example
+ * ```ts
+ * const delay = getCloseFallbackDelayMs(200); // 250
+ * ```
+ */
 export function getCloseFallbackDelayMs(durationMs: number): number {
   return durationMs > 0 ? durationMs + CLOSE_FALLBACK_BUFFER_MS : 0;
 }
