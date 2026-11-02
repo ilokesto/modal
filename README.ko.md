@@ -62,8 +62,7 @@ export function App() {
 
 이 저장소 루트에서 Node 24.22.1과 pnpm 10.17.1을 사용하세요.
 
-API 문서를 기여할 때는 [런타임 JSDoc 계약](./JSDOC.md)을 따라 영어로 작성하세요.
-`pnpm lint:jsdoc`의 의미 기반 검사는 `test:tooling`과 CI에서도 실행됩니다.
+API 문서를 기여할 때는 [런타임 JSDoc 계약](./JSDOC.md)을 따라 영어로 작성하세요. `pnpm lint:jsdoc`의 의미 기반 검사는 `test:tooling`과 CI에서도 실행됩니다.
 
 ```bash
 pnpm install --frozen-lockfile
