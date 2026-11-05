@@ -1,6 +1,28 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+for (const [button, result] of [
+  ['Close all then late close', 'undefined'],
+  ['Close all then late reject', 'undefined'],
+  ['Close and remove reentrantly', 'accepted'],
+]) {
+  test(`close consistency: ${button} -> notification and settlement agree once`, async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open consistent result', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Consistent close result', exact: true });
+
+    await dialog.getByRole('button', { name: button, exact: true }).click();
+
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText(`Consistent result: ${result}`, { exact: true })).toBeVisible();
+    await expect(page.getByText(`Consistent notification: ${result}`, { exact: true })).toBeVisible();
+    await expect(page.getByText('Consistent count: 1', { exact: true })).toBeVisible();
+    if (result === 'undefined') {
+      await expect(page.getByText('Consistent timing: deferred', { exact: true })).toBeVisible();
+    }
+  });
+}
+
 async function wheelBackground(page: Page) {
   await page.evaluate(() => {
     document.documentElement.dataset.wheelProcessed = 'pending';

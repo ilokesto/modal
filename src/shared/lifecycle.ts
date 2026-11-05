@@ -10,7 +10,7 @@ function getModalCloseHandler(item: OverlayItem): ModalCloseHandler<unknown> | u
 }
 
 /**
- * @description Wraps an overlay store with once-per-modal close notifications while preserving overlay settlement and subscription behavior. Close and reject notify immediately; remove and clear notify any remaining modal callbacks.
+ * @description Wraps an overlay store with once-per-modal close notifications after accepted transitions. Close and reject notify after recording their result; remove and clear notify after removal. CloseAll defers notification until removal, and ignored closing requests do not notify.
  * @param {OverlayStoreApi} store - Underlying overlay store whose operations and snapshots are delegated.
  * @returns {OverlayStoreApi} A lifecycle-aware store with the external overlay API unchanged.
  * @example
@@ -24,31 +24,15 @@ function getModalCloseHandler(item: OverlayItem): ModalCloseHandler<unknown> | u
 export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreApi {
   const notifiedModalIds = new Set<string>();
 
-  function notifyModalClose<TResult>(
-    id: string,
-    onModalClose: ModalCloseHandler<TResult> | undefined,
-    result?: TResult
-  ) {
-    if (notifiedModalIds.has(id)) {
+  function takeModalCloseNotification(item: OverlayItem | undefined, result?: unknown) {
+    if (!item || item.type !== 'modal' || notifiedModalIds.has(item.id)) {
       return;
     }
 
-    notifiedModalIds.add(id);
-    onModalClose?.(result);
-  }
-
-  function notifyModalItemClose(item: OverlayItem | undefined, result?: unknown) {
-    if (!item || item.type !== 'modal') {
-      return;
-    }
-
-    notifyModalClose(item.id, getModalCloseHandler(item), result);
-  }
-
-  function notifyModalItemsClose(items: ReadonlyArray<OverlayItem>) {
-    for (const item of items) {
-      notifyModalItemClose(item, item.closeResult);
-    }
+    // Reserve before delegating: synchronous subscribers can remove or reopen this id.
+    notifiedModalIds.add(item.id);
+    const onModalClose = getModalCloseHandler(item);
+    return () => onModalClose?.(result);
   }
 
   return {
@@ -58,19 +42,18 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
       const existingId = typeof options.id === 'string'
         ? store.getSnapshot().some((item) => item.id === options.id)
         : false;
-      const request = store.open<TResult>(options);
-
-      if (!existingId) {
-        notifiedModalIds.delete(request.id);
+      if (!existingId && typeof options.id === 'string') {
+        notifiedModalIds.delete(options.id);
       }
 
-      return request;
+      return store.open<TResult>(options);
     },
     close: (id, result) => {
       const item = store.getSnapshot().find((candidate) => candidate.id === id);
 
-      notifyModalItemClose(item, result);
+      const notify = item?.status === 'open' ? takeModalCloseNotification(item, result) : undefined;
       store.close(id, result);
+      notify?.();
     },
     closeAll: () => {
       store.closeAll();
@@ -78,31 +61,32 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
     reject: (id, reason) => {
       const item = store.getSnapshot().find((candidate) => candidate.id === id);
 
-      notifyModalItemClose(item, undefined);
+      const notify = item?.status === 'open' ? takeModalCloseNotification(item, undefined) : undefined;
       store.reject(id, reason);
+      notify?.();
     },
     remove: (id) => {
       const items = store.getSnapshot();
       const targetId = id ?? items[items.length - 1]?.id;
-      const item = targetId
-        ? items.find((candidate) => candidate.id === targetId)
-        : undefined;
+      const item = items.find((candidate) => candidate.id === targetId);
+      const notify = takeModalCloseNotification(item, item?.closeResult);
 
-      notifyModalItemClose(item, item?.closeResult);
-      store.remove(id);
-
-      if (targetId) {
+      if (targetId !== undefined) {
         notifiedModalIds.delete(targetId);
       }
+      store.remove(targetId);
+      notify?.();
     },
     clear: () => {
       const items = store.getSnapshot();
 
-      notifyModalItemsClose(items);
-      store.clear();
-
+      const notifications = items.map((item) => takeModalCloseNotification(item, item.closeResult));
       for (const item of items) {
         notifiedModalIds.delete(item.id);
+      }
+      store.clear();
+      for (const notify of notifications) {
+        notify?.();
       }
     },
     subscribe: store.subscribe,
