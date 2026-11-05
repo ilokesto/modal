@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useModalStackInfo } from '../hooks/useIsTopModal';
 import { useModalExit } from '../hooks/useModalExit';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { getFocusableElements } from '../shared/getFocusableElements';
 import type { ModalAdapterProps, ModalPosition } from '../shared/types';
 
@@ -18,9 +19,6 @@ function getPositionStyles(pos?: ModalPosition): React.CSSProperties {
     default: return { alignItems: 'center', justifyContent: 'center' };
   }
 }
-
-let scrollLockCount = 0;
-let originalBodyOverflow = '';
 
 interface ModalAdapterInlineProps<TResult> extends ModalAdapterProps<TResult> {
   isHostedInTopLayer?: boolean;
@@ -102,21 +100,7 @@ export function ModalAdapterInline<TResult>({
     };
   }, [isHostedInTopLayer, remove]);
 
-  // Body scroll lock
-  useEffect(() => {
-    if (scrollLockCount === 0) {
-      originalBodyOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-    }
-    scrollLockCount++;
-    
-    return () => {
-      scrollLockCount--;
-      if (scrollLockCount === 0) {
-        document.body.style.overflow = originalBodyOverflow;
-      }
-    };
-  }, []);
+  useBodyScrollLock();
 
   const { prefersReducedMotion, handleAnimationEnd } = useModalExit(containerRef, status, remove);
 

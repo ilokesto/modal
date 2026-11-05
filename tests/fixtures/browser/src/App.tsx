@@ -8,6 +8,8 @@ import type { UseModalOptions } from '../../../../src';
 const firstProviderStore = createOverlayStore();
 const secondProviderStore = createOverlayStore();
 const mixedProviderStore = createOverlayStore();
+const scrollFirstStore = createOverlayStore();
+const scrollSecondStore = createOverlayStore();
 
 function InlineConfirmButton() {
   const { display } = useModal();
@@ -378,6 +380,55 @@ function FocusCandidatesButton({ transport }: { transport: 'inline' | 'top-layer
   return <button type="button" onClick={open}>Open {transport} focus candidates</button>;
 }
 
+function ScrollLockDemo() {
+  const params = new URLSearchParams(window.location.search);
+  const openSecond = () => {
+    scrollSecondStore.open({
+      id: 'scroll-second',
+      type: 'modal',
+      props: {
+        transport: params.get('secondTransport') === 'inline' ? 'inline' : 'top-layer',
+        ariaLabel: 'Scroll second modal',
+        style: { background: 'white', padding: 24 },
+        render: (close: () => void) => (
+          <section>
+            <h2>Scroll second modal</h2>
+            <button type="button" onClick={() => scrollFirstStore.close('scroll-first')}>Close scroll first</button>
+            <button type="button" onClick={() => close()}>Close scroll second</button>
+          </section>
+        ),
+      },
+    });
+  };
+  const openFirst = () => {
+    scrollFirstStore.open({
+      id: 'scroll-first',
+      type: 'modal',
+      props: {
+        transport: params.get('firstTransport') === 'inline' ? 'inline' : 'top-layer',
+        ariaLabel: 'Scroll first modal',
+        style: { background: 'white', padding: 24 },
+        render: (close: () => void) => (
+          <section>
+            <h2>Scroll first modal</h2>
+            <button type="button" onClick={openSecond}>Open scroll second</button>
+            <button type="button" onClick={() => close()}>Close scroll first</button>
+          </section>
+        ),
+      },
+    });
+  };
+
+  return (
+    <section aria-label="Scroll lock demo" style={{ minHeight: 2600 }}>
+      <h2>Scroll lock demo</h2>
+      <button type="button" onClick={openFirst}>Open scroll first</button>
+      <ModalProvider store={scrollFirstStore}>{null}</ModalProvider>
+      <ModalProvider store={scrollSecondStore}>{null}</ModalProvider>
+    </section>
+  );
+}
+
 function DemoApp() {
   return (
     <main>
@@ -393,6 +444,7 @@ function DemoApp() {
       </ModalProvider>
       <ProviderIsolationDemo />
       <ModalProvider store={mixedProviderStore}>{null}</ModalProvider>
+      {new URLSearchParams(window.location.search).has('scrollLock') && <ScrollLockDemo />}
     </main>
   );
 }

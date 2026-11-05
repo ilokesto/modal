@@ -39,3 +39,16 @@ test('mixed transports: inline child in a native host -> one named dialog withou
 
   expect(results.violations).toEqual([]);
 });
+
+test('scroll lock: nested native modals on a tall page -> no detectable axe violations', async ({ page }) => {
+  await page.goto('/?scrollLock=1');
+  await page.getByRole('button', { name: 'Open scroll first', exact: true }).click();
+  await page.getByRole('button', { name: 'Open scroll second', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Scroll second modal', exact: true });
+  await expect(dialog).toHaveCSS('opacity', '1');
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+
+  const results = await new AxeBuilder({ page }).include('body').analyze();
+
+  expect(results.violations).toEqual([]);
+});

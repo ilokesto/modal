@@ -1,4 +1,21 @@
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+
+async function wheelBackground(page: Page) {
+  await page.evaluate(() => {
+    document.documentElement.dataset.wheelProcessed = 'pending';
+    window.addEventListener('wheel', () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.documentElement.dataset.wheelProcessed = 'done';
+      }));
+    }, { once: true });
+  });
+
+  await page.mouse.move(4, 4);
+  await page.mouse.wheel(0, 500);
+
+  await expect(page.locator('html')).toHaveAttribute('data-wheel-processed', 'done');
+}
 
 for (const transport of ['inline', 'top-layer'] as const) {
   for (const candidate of [
@@ -440,3 +457,69 @@ test('physical Escape dismisses a hosted inline modal before the native modal in
   await page.keyboard.press('Escape');
   await expect(topLayerDialog).toBeHidden();
 });
+
+for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+  test(`scroll lock: native modal at ${viewport.width}px -> wheel stays locked until removal`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/?scrollLock=1');
+    await page.evaluate(() => document.body.style.setProperty('overflow', 'auto', 'important'));
+    await page.getByRole('button', { name: 'Open scroll first', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Scroll first modal', exact: true });
+    await expect(dialog).toBeVisible();
+    const initialScroll = await page.evaluate(() => window.scrollY);
+
+    await wheelBackground(page);
+
+    expect(await page.evaluate(() => window.scrollY)).toBe(initialScroll);
+    await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+    await dialog.getByRole('button', { name: 'Close scroll first', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    expect(await page.evaluate(() => document.body.style.getPropertyPriority('overflow'))).toBe('important');
+    await expect(page.locator('body')).toHaveCSS('overflow', 'auto');
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await wheelBackground(page);
+    await page.waitForFunction(() => window.scrollY > 0);
+  });
+}
+
+for (const firstTransport of ['inline', 'top-layer']) {
+  for (const secondTransport of ['inline', 'top-layer']) {
+    for (const firstToClose of ['first', 'second']) {
+      test(`scroll lock: ${firstTransport}/${secondTransport}, close ${firstToClose} first -> last provider owns release`, async ({ page }) => {
+        await page.goto(`/?scrollLock=1&firstTransport=${firstTransport}&secondTransport=${secondTransport}`);
+        await page.evaluate(() => document.body.style.setProperty('overflow', 'auto', 'important'));
+        await page.getByRole('button', { name: 'Open scroll first', exact: true }).click();
+        const first = page.getByRole('dialog', { name: 'Scroll first modal', exact: true });
+        await first.getByRole('button', { name: 'Open scroll second', exact: true }).click();
+        const second = page.getByRole('dialog', { name: 'Scroll second modal', exact: true });
+        await expect(second).toBeVisible();
+        const initialScroll = await page.evaluate(() => window.scrollY);
+
+        await wheelBackground(page);
+
+        expect(await page.evaluate(() => window.scrollY)).toBe(initialScroll);
+        await second.getByRole('button', { name: `Close scroll ${firstToClose}`, exact: true }).click();
+        await expect(firstToClose === 'first' ? first : second).toHaveCount(0);
+        await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+        const remainingScroll = await page.evaluate(() => window.scrollY);
+        await wheelBackground(page);
+        expect(await page.evaluate(() => window.scrollY)).toBe(remainingScroll);
+
+        const remaining = firstToClose === 'first' ? second : first;
+        await remaining.getByRole('button', {
+          name: firstToClose === 'first' ? 'Close scroll second' : 'Close scroll first',
+          exact: true,
+        }).click();
+        await expect(first).toHaveCount(0);
+        await expect(second).toHaveCount(0);
+        await expect(page.locator('body')).toHaveCSS('overflow', 'auto');
+        expect(await page.evaluate(() => document.body.style.getPropertyPriority('overflow'))).toBe('important');
+
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await wheelBackground(page);
+        await page.waitForFunction(() => window.scrollY > 0);
+      });
+    }
+  }
+}
