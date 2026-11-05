@@ -46,9 +46,12 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
         return false;
       }
 
-      // The top-layer adapter calls showModal() before selecting candidates.
-      // A modal dialog escapes inherited inertness, but not inert on the dialog itself.
-      if (ancestor === container && container.matches('dialog[open]')) {
+      // Native adapters and inline hosts call showModal() before selecting candidates.
+      // Their modal boundary escapes inherited inertness, but not inert on the dialog itself.
+      if (
+        (ancestor === container && container.matches('dialog[open]')) ||
+        ancestor.matches('dialog.ilokesto-modal-inline-host[open]')
+      ) {
         inheritsInert = false;
       }
     }

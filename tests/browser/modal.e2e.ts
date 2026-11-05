@@ -165,6 +165,118 @@ test('top-layer native child close: form submission -> parent keeps focus and Es
   await expect(page.getByText('Native dismiss count: 1', { exact: true })).toBeVisible();
 });
 
+for (const [parentTransport, childTransport, providers] of [
+  ['top-layer', 'default', 'same'],
+  ['top-layer', 'inline', 'same'],
+  ['inline', 'top-layer', 'same'],
+  ['top-layer', 'default', 'separate'],
+  ['top-layer', 'inline', 'separate'],
+]) {
+  test(`mixed transports: ${parentTransport}/${childTransport}/${providers} -> child is operable and parent state survives`, async ({ page }) => {
+    await page.goto(`/?parentTransport=${parentTransport}&childTransport=${childTransport}&providers=${providers}`);
+    const opener = page.getByRole('button', { name: 'Open mixed parent', exact: true });
+    await opener.click();
+    const parent = page.getByRole('dialog', { name: 'Mixed parent', exact: true });
+    await parent.getByRole('textbox', { name: 'Parent draft' }).fill('keep parent input');
+    const childOpener = parent.getByRole('button', { name: 'Open mixed child', exact: true });
+    await childOpener.click();
+    const child = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+    const input = child.getByRole('textbox', { name: 'Child draft' });
+
+    await expect(input).toBeFocused();
+    await input.fill('child input');
+    await child.getByRole('button', { name: 'Child action', exact: true }).click();
+    await expect(child.getByText('Child actions: 1', { exact: true })).toBeVisible();
+    await expect(page.locator('.mixed-child-panel')).toHaveCSS('border-top-width', '3px');
+    if (childTransport !== 'top-layer') {
+      await expect(child.locator('.mixed-child-backdrop')).toHaveCSS('background-color', 'rgba(0, 30, 60, 0.6)');
+      await input.focus();
+      await page.keyboard.press('Shift+Tab');
+      await expect(child.getByRole('button', { name: 'Close mixed child', exact: true })).toBeFocused();
+      await page.keyboard.press('Tab');
+      await expect(input).toBeFocused();
+    }
+    await child.getByRole('button', { name: 'Close mixed child', exact: true }).click();
+
+    await expect(child).toHaveCount(0);
+    await expect(childOpener).toBeFocused();
+    await expect(parent.getByRole('textbox', { name: 'Parent draft' })).toHaveValue('keep parent input');
+    await expect(page.getByText('Mixed child result: child-value', { exact: true })).toBeVisible();
+    await expect(page.getByText('Mixed child closes: 1', { exact: true })).toBeVisible();
+
+    await childOpener.click();
+    await expect(input).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(child).toHaveCount(0);
+    await expect(childOpener).toBeFocused();
+    await expect(page.getByText('Mixed child closes: 2', { exact: true })).toBeVisible();
+    await expect(page.getByText('Mixed child dismisses: 1', { exact: true })).toBeVisible();
+    await expect(page.getByText('Mixed parent dismisses: 0', { exact: true })).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(parent).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+}
+
+test('mixed transports: closing inline host -> repeated Escape cannot dismiss the native parent', async ({ page }) => {
+  await page.goto('/?slowChild=1');
+  await page.getByRole('button', { name: 'Open mixed parent', exact: true }).click();
+  await page.getByRole('button', { name: 'Open mixed child', exact: true }).click();
+  const child = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+  await child.getByRole('button', { name: 'Close mixed child', exact: true }).click();
+
+  await page.keyboard.press('Escape');
+
+  await expect(child).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Mixed parent', exact: true })).toBeVisible();
+  await expect(page.getByText('Mixed parent dismisses: 0', { exact: true })).toBeVisible();
+});
+
+test('mixed transports: parent and default child open in one event -> child owns the actual top layer', async ({ page }) => {
+  await page.goto('/?batchOpen=1');
+
+  await page.getByRole('button', { name: 'Open mixed parent', exact: true }).click();
+
+  const child = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+  await expect(child.getByRole('textbox', { name: 'Child draft' })).toBeFocused();
+  await child.getByRole('button', { name: 'Child action', exact: true }).click();
+  await expect(child.getByText('Child actions: 1', { exact: true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(child).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Mixed parent', exact: true })).toBeVisible();
+});
+
+test('mixed transports: inert provider ancestor -> hosted controls remain focusable and operable', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('main').evaluate((element) => element.setAttribute('inert', ''));
+  await page.getByRole('button', { name: 'Open mixed parent', exact: true }).dispatchEvent('click');
+
+  await page.getByRole('button', { name: 'Open mixed child', exact: true }).click();
+
+  const child = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+  await expect(child.getByRole('textbox', { name: 'Child draft' })).toBeFocused();
+  await child.getByRole('button', { name: 'Child action', exact: true }).click();
+  await expect(child.getByText('Child actions: 1', { exact: true })).toBeVisible();
+});
+
+test('mixed transports: non-dismissible hosted child -> native Escape and backdrop keep it open', async ({ page }) => {
+  await page.goto('/?fixedChild=1');
+  await page.getByRole('button', { name: 'Open mixed parent', exact: true }).click();
+  await page.getByRole('button', { name: 'Open mixed child', exact: true }).click();
+  const child = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+
+  await page.keyboard.press('Escape');
+  await child.locator('.mixed-child-backdrop').click({ position: { x: 8, y: 8 } });
+
+  await expect(child).toBeVisible();
+  await expect(page.getByText('Mixed child dismisses: 0', { exact: true })).toBeVisible();
+  await expect(page.getByText('Mixed child closes: 0', { exact: true })).toBeVisible();
+  await child.getByRole('button', { name: 'Close mixed child', exact: true }).click();
+  await expect(child).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Mixed parent', exact: true })).toBeVisible();
+});
+
 test('top-layer descendant and padding clicks keep the dialog open', async ({ page }) => {
   // Given
   await page.goto('/');
@@ -309,16 +421,22 @@ test('physical Escape dismisses first-provider inline and second-provider top-la
   await expect(topLayerDialog).toBeHidden();
 });
 
-test('physical Escape dismisses first-provider top-layer and second-provider inline modals', async ({ page }) => {
+test('physical Escape dismisses a hosted inline modal before the native modal in another provider', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open first provider top layer' }).click();
   await page.getByRole('button', { name: 'Open second provider inline' }).dispatchEvent('click');
 
   const topLayerDialog = page.getByRole('dialog', { name: 'First provider top-layer modal' });
   const inlineDialog = page.getByRole('dialog', { name: 'Second provider inline modal' });
+  await expect(inlineDialog.getByRole('button', { name: 'Second start' })).toBeFocused();
+  await inlineDialog.getByRole('button', { name: 'Second end' }).click();
 
   await page.keyboard.press('Escape');
 
-  await expect(topLayerDialog).toBeHidden();
   await expect(inlineDialog).toBeHidden();
+  await expect(topLayerDialog).toBeVisible();
+  await expect(topLayerDialog.getByRole('button', { name: 'First close top layer' })).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(topLayerDialog).toBeHidden();
 });

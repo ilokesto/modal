@@ -22,6 +22,10 @@ export const globalStyles = `
 .ilokesto-modal-dialog.ilokesto-modal-closing::backdrop {
   animation: ilokestoModalFadeOut 0.2s ease-out forwards;
 }
+.ilokesto-modal-dialog.ilokesto-modal-inline-host::backdrop {
+  background: transparent;
+  animation: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .ilokesto-modal-dialog::backdrop {
     animation-duration: 0s !important;

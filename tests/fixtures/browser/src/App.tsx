@@ -3,9 +3,11 @@ import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createOverlayStore } from '@ilokesto/overlay';
 import { ModalProvider, useModal } from '../../../../src';
+import type { UseModalOptions } from '../../../../src';
 
 const firstProviderStore = createOverlayStore();
 const secondProviderStore = createOverlayStore();
+const mixedProviderStore = createOverlayStore();
 
 function InlineConfirmButton() {
   const { display } = useModal();
@@ -143,6 +145,86 @@ function NativeCloseButton() {
       <p>Native close values: {closeResults.join(',')}</p>
       <p>Native dismiss count: {dismissCount}</p>
       <p>Native child result: {childResult}</p>
+    </section>
+  );
+}
+
+function MixedChildContent({ close }: { close: (value?: string) => void }) {
+  const [actions, setActions] = useState(0);
+
+  return (
+    <section style={{ background: 'white', padding: 24 }}>
+      <h2>Mixed child</h2>
+      <label>Child draft<input /></label>
+      <button type="button" onClick={() => setActions((count) => count + 1)}>Child action</button>
+      <p>Child actions: {actions}</p>
+      <button type="button" onClick={() => close('child-value')}>Close mixed child</button>
+    </section>
+  );
+}
+
+function MixedTransportButton() {
+  const { display } = useModal();
+  const [childResult, setChildResult] = useState('pending');
+  const [childCloses, setChildCloses] = useState(0);
+  const [childDismisses, setChildDismisses] = useState(0);
+  const [parentDismisses, setParentDismisses] = useState(0);
+  const params = new URLSearchParams(window.location.search);
+  const parentTransport = params.get('parentTransport') === 'inline' ? 'inline' : 'top-layer';
+  const childTransport = params.get('childTransport') === 'top-layer' ? 'top-layer'
+    : params.get('childTransport') === 'inline' ? 'inline' : undefined;
+  const separateProviders = params.get('providers') === 'separate';
+
+  const openChild = async () => {
+    const options: UseModalOptions<string> = {
+      id: 'mixed-child',
+      transport: childTransport,
+      ariaLabel: 'Mixed child',
+      className: 'mixed-child-panel',
+      backdropClassName: 'mixed-child-backdrop',
+      style: {
+        border: '3px solid rgb(0, 80, 160)',
+        ...(params.has('slowChild') ? { animationDuration: '1s' } : {}),
+      },
+      backdropStyle: { backgroundColor: 'rgba(0, 30, 60, 0.6)' },
+      dismissible: !params.has('fixedChild'),
+      onModalClose: () => setChildCloses((count) => count + 1),
+      onDismiss: () => setChildDismisses((count) => count + 1),
+      render: (close) => <MixedChildContent close={close} />,
+    };
+    const value = await (separateProviders
+      ? mixedProviderStore.open<string>({ id: options.id, type: 'modal', props: { ...options } }).promise
+      : display<string>(options));
+    setChildResult(String(value));
+  };
+
+  const open = () => {
+    void display({
+      id: 'mixed-parent',
+      transport: parentTransport,
+      ariaLabel: 'Mixed parent',
+      onDismiss: () => setParentDismisses((count) => count + 1),
+      render: (close) => (
+        <section style={{ background: 'white', padding: 24 }}>
+          <h2>Mixed parent</h2>
+          <label>Parent draft<input /></label>
+          <button type="button" onClick={openChild}>Open mixed child</button>
+          <button type="button" onClick={() => close()}>Close mixed parent</button>
+        </section>
+      ),
+    });
+    if (params.has('batchOpen')) {
+      void openChild();
+    }
+  };
+
+  return (
+    <section aria-label="Mixed transport demo">
+      <button type="button" onClick={open}>Open mixed parent</button>
+      <p>Mixed child result: {childResult}</p>
+      <p>Mixed child closes: {childCloses}</p>
+      <p>Mixed child dismisses: {childDismisses}</p>
+      <p>Mixed parent dismisses: {parentDismisses}</p>
     </section>
   );
 }
@@ -304,11 +386,13 @@ function DemoApp() {
         <InlineConfirmButton />
         <TopLayerButton />
         <NativeCloseButton />
+        <MixedTransportButton />
         <StackedButton />
         <FocusCandidatesButton transport="inline" />
         <FocusCandidatesButton transport="top-layer" />
       </ModalProvider>
       <ProviderIsolationDemo />
+      <ModalProvider store={mixedProviderStore}>{null}</ModalProvider>
     </main>
   );
 }

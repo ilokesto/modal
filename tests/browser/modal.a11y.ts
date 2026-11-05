@@ -26,3 +26,16 @@ test('top-layer modal has no detectable axe violations', async ({ page }) => {
 
   expect(results.violations).toEqual([]);
 });
+
+test('mixed transports: inline child in a native host -> one named dialog without detectable axe violations', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open mixed parent', exact: true }).click();
+  await page.getByRole('button', { name: 'Open mixed child', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Mixed child', exact: true });
+  await expect(dialog.locator('.mixed-child-panel')).toHaveCSS('opacity', '1');
+  await expect(dialog.getByRole('dialog')).toHaveCount(0);
+
+  const results = await new AxeBuilder({ page }).include('body').analyze();
+
+  expect(results.violations).toEqual([]);
+});

@@ -22,10 +22,15 @@ function getPositionStyles(pos?: ModalPosition): React.CSSProperties {
 let scrollLockCount = 0;
 let originalBodyOverflow = '';
 
+interface ModalAdapterInlineProps<TResult> extends ModalAdapterProps<TResult> {
+  isHostedInTopLayer?: boolean;
+}
+
 /**
- * @description Renders a fixed-position modal with scroll locking, provider-local focus containment and top-modal dismissal.
- * @param {ModalAdapterProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
- * @param {'inline' | 'top-layer'} [props.transport] - Router selection hint; this adapter itself always renders inline.
+ * @description Renders a fixed-position modal with scroll locking, provider-local focus containment and top-modal dismissal. A native host preserves inline presentation when a preceding native modal would otherwise block interaction.
+ * @param {ModalAdapterInlineProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
+ * @param {boolean} [props.isHostedInTopLayer] - Internal router decision to retain this inline modal in a native host until removal.
+ * @param {'inline' | 'top-layer'} [props.transport] - Router selection hint; this adapter retains inline panel presentation, optionally inside a native host.
  * @param {ModalPosition} [props.position] - Panel position; defaults to center.
  * @param {'dialog' | 'alertdialog'} [props.role] - Accessible dialog role; defaults to dialog.
  * @param {string} [props.ariaLabel] - Accessible name when no labelled-by element is supplied.
@@ -70,11 +75,32 @@ export function ModalAdapterInline<TResult>({
   backdropStyle,
   autoFocus = true,
   restoreFocus = true,
-}: ModalAdapterProps<TResult>) {
+  isHostedInTopLayer = false,
+}: ModalAdapterInlineProps<TResult>) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const nativeDialogRef = useRef<HTMLDialogElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const { containsTarget, isTopModal, stackIndex } = useModalStackInfo(id, wrapperRef);
+
+  useEffect(() => {
+    const dialog = nativeDialogRef.current;
+    if (!dialog) {
+      return;
+    }
+
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    dialog.addEventListener('close', remove);
+    // Match the native adapter's effect phase so batched siblings keep their top-layer order.
+    dialog.showModal();
+
+    return () => {
+      dialog.removeEventListener('close', remove);
+      if (dialog.open) {
+        dialog.close();
+      }
+    };
+  }, [isHostedInTopLayer, remove]);
 
   // Body scroll lock
   useEffect(() => {
@@ -95,7 +121,9 @@ export function ModalAdapterInline<TResult>({
   const { prefersReducedMotion, handleAnimationEnd } = useModalExit(containerRef, status, remove);
 
   useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    if (!isHostedInTopLayer) {
+      previousFocusRef.current = document.activeElement as HTMLElement | null;
+    }
 
     if (autoFocus && containerRef.current) {
       const focusable = getFocusableElements(containerRef.current)[0] ?? containerRef.current;
@@ -107,7 +135,7 @@ export function ModalAdapterInline<TResult>({
         previousFocusRef.current.focus();
       }
     };
-  }, [autoFocus, restoreFocus]);
+  }, [autoFocus, restoreFocus, isHostedInTopLayer]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -190,7 +218,7 @@ export function ModalAdapterInline<TResult>({
     ? `ilokestoModalScaleOut ${animationDuration} ease-out forwards`
     : `ilokestoModalScaleIn ${animationDuration} ease-out forwards`;
 
-  return (
+  const panel = (
     <div
       ref={wrapperRef}
       className={`ilokesto-modal-inline-wrapper ${isClosing ? 'ilokesto-modal-closing' : 'ilokesto-modal-open'}`}
@@ -220,11 +248,11 @@ export function ModalAdapterInline<TResult>({
       />
       <div
         ref={containerRef}
-        role={role}
-        aria-modal="true"
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledBy}
-        aria-describedby={ariaDescribedBy}
+        role={isHostedInTopLayer ? undefined : role}
+        aria-modal={isHostedInTopLayer ? undefined : true}
+        aria-label={isHostedInTopLayer ? undefined : ariaLabel}
+        aria-labelledby={isHostedInTopLayer ? undefined : ariaLabelledBy}
+        aria-describedby={isHostedInTopLayer ? undefined : ariaDescribedBy}
         tabIndex={-1}
         className={`ilokesto-modal-panel ${className || ''}`}
         style={{
@@ -238,5 +266,44 @@ export function ModalAdapterInline<TResult>({
         {content}
       </div>
     </div>
+  );
+
+  if (!isHostedInTopLayer) {
+    return panel;
+  }
+
+  return (
+    <dialog
+      ref={nativeDialogRef}
+      role={role === 'alertdialog' ? 'alertdialog' : undefined}
+      aria-modal="true"
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
+      aria-describedby={ariaDescribedBy}
+      className="ilokesto-modal-dialog ilokesto-modal-inline-host"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        maxWidth: 'none',
+        maxHeight: 'none',
+        margin: 0,
+        padding: 0,
+        border: 0,
+        background: 'transparent',
+        color: 'inherit',
+        overflow: 'visible',
+      }}
+      onCancel={(event) => {
+        event.preventDefault();
+        if (event.target === event.currentTarget && isTopModal && dismissible && status !== 'closing') {
+          onDismiss?.();
+          close();
+        }
+      }}
+    >
+      {panel}
+    </dialog>
   );
 }
