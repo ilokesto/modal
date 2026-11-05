@@ -1,5 +1,18 @@
 # @ilokesto/modal
 
+## 2.0.4
+
+### Patch Changes
+
+- 68ed9d1: Keep newly opened inline and default modals operable above native dialogs, including across providers, by retaining their existing presentation inside a transparent native host. Preserve provider-local stacking, dismissal, input state and focus restoration.
+- 9442e69: Preserve React inline style semantics for native dialog backdrops, including numeric lengths, unitless values, vendor properties and case-sensitive custom properties. Copy parsed declarations into the scoped backdrop rule instead of interpolating caller values into stylesheet text, and clear removed styles on updates.
+- bc3402c: Notify modal closure only for accepted transitions and preserve settlement results during reentrant callbacks. Keep closeAll notifications deferred until removal and avoid removing requests opened by remove/clear callbacks.
+
+  Deliver committed close notifications even when store subscribers throw, preserving the delegated error. Attempt every captured clear callback before reporting callback failures.
+
+- 5cd7e07: Synchronize native top-layer dialog closure with modal removal so dialog forms and direct close calls settle pending requests and notify onModalClose once. Preserve results and rejections already set through the modal API.
+- 546b4f0: Share body scroll-lock ownership across inline, top-layer and hosted inline modals. Keep scrolling locked through exit and across providers until the last modal is removed, then restore the original overflow declarations and priorities.
+
 ## 2.0.3
 
 ### Patch Changes
