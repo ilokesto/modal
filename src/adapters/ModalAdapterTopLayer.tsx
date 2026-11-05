@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useId } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useCallback, useId } from 'react';
 import { useIsTopModal } from '../hooks/useIsTopModal';
 import { useModalExit } from '../hooks/useModalExit';
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
@@ -20,13 +20,6 @@ function getDialogPositionStyles(pos?: ModalPosition): React.CSSProperties {
   }
 }
 
-function cssPropertiesToString(style: React.CSSProperties): string {
-  return Object.entries(style).map(([k, v]) => {
-    const kebabName = k.replace(/[A-Z]/g, m => '-' + m.toLowerCase());
-    return `${kebabName}: ${v};`;
-  }).join(' ');
-}
-
 /**
  * @description Renders a native modal dialog with browser top-layer containment, shared body scroll locking and provider-local dismissal. Requires showModal support; closes the dialog after exit. A native close event removes the modal immediately, preserving any pending result or rejection.
  * @param {ModalAdapterProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
@@ -42,7 +35,7 @@ function cssPropertiesToString(style: React.CSSProperties): string {
  * @param {string} [props.className] - Panel class names.
  * @param {React.CSSProperties} [props.style] - Panel inline styles overriding default motion and positioning styles.
  * @param {string} [props.backdropClassName] - Backdrop class names; top-layer attaches these to the dialog.
- * @param {React.CSSProperties} [props.backdropStyle] - Backdrop styles; top-layer serializes these into a scoped backdrop rule.
+ * @param {React.CSSProperties} [props.backdropStyle] - Backdrop styles applied through React and copied as CSSOM declarations into a scoped backdrop rule, preserving numeric units, unitless values and custom properties.
  * @param {boolean} [props.autoFocus] - Whether the adapter explicitly focuses the first eligible descendant; defaults to true. Native dialog focus may still move when false.
  * @param {boolean} [props.restoreFocus] - Whether to restore the previous connected focus target on unmount; defaults to true.
  * @param {ModalRender<TResult>} props.render - Pure content renderer receiving a scoped close callback and modal context.
@@ -77,6 +70,7 @@ export function ModalAdapterTopLayer<TResult>({
   restoreFocus = true,
 }: ModalAdapterProps<TResult>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const backdropStyleRef = useRef<HTMLStyleElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const uniqueId = useId().replace(/:/g, '');
   const isTopModal = useIsTopModal(id, dialogRef);
@@ -89,6 +83,23 @@ export function ModalAdapterTopLayer<TResult>({
     remove();
   }, [remove]);
   const { prefersReducedMotion, handleAnimationEnd } = useModalExit(dialogRef, status, finishExit);
+
+  useLayoutEffect(() => {
+    const element = backdropStyleRef.current;
+    const rule = element?.sheet?.cssRules[0] as CSSStyleRule | undefined;
+    if (element && rule) {
+      // React owns value normalization; CSSOM copies only parsed declarations,
+      // never caller-provided stylesheet text. Replace to clear removed values.
+      rule.style.cssText = '';
+      for (const property of Array.from(element.style)) {
+        rule.style.setProperty(
+          property,
+          element.style.getPropertyValue(property),
+          element.style.getPropertyPriority(property),
+        );
+      }
+    }
+  }, [backdropStyle]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -168,14 +179,12 @@ export function ModalAdapterTopLayer<TResult>({
 
   return (
     <>
-      {(backdropStyle || backdropClassName) && (
-        <style>
-          {`
-            .ilokesto-modal-dialog-${uniqueId}::backdrop {
-              ${backdropStyle ? cssPropertiesToString(backdropStyle) : ''}
-            }
-          `}
-        </style>
+      {backdropStyle && (
+        <span hidden style={{ display: 'none' }}>
+          <style ref={backdropStyleRef} style={backdropStyle}>
+            {`.ilokesto-modal-dialog-${uniqueId}::backdrop {}`}
+          </style>
+        </span>
       )}
       <dialog
         ref={dialogRef}

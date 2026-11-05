@@ -1,6 +1,61 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+for (const width of [1280, 390]) {
+  test(`backdrop styles at ${width}px: numeric, unitless, custom and vendor values -> match React inline semantics`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const opener = page.getByRole('button', { name: 'Open styled backdrop', exact: true });
+    await opener.click();
+    const dialog = page.getByRole('dialog', { name: 'Backdrop style semantics' });
+    await expect(dialog).toBeVisible();
+    const properties = [
+      'padding-top', 'border-top-width', 'margin-top', 'top', 'opacity', 'line-height',
+      'z-index', 'flex-grow', '-webkit-text-stroke-width', '-webkit-line-clamp',
+      '--BackdropGap', '--BackdropColor', 'background-color',
+    ];
+    const actual = await dialog.evaluate((element, properties) => {
+      const backdrop = getComputedStyle(element, '::backdrop');
+      const reference = getComputedStyle(document.querySelector('[data-testid="backdrop-reference"]')!);
+      return Object.fromEntries(properties.map((property) => [
+        property, [backdrop.getPropertyValue(property), reference.getPropertyValue(property)],
+      ]));
+    }, properties);
+
+    for (const [property, [backdrop, reference]] of Object.entries(actual)) {
+      expect(backdrop, property).toBe(reference);
+    }
+    expect(actual['padding-top'][0]).toBe('12px');
+    expect(actual['border-top-width'][0]).toBe('3px');
+    expect(actual.opacity[0]).toBe('0.65');
+    expect(actual['line-height'][0]).toBe('20px');
+    expect(actual['-webkit-text-stroke-width'][0]).toBe('2px');
+    expect(actual['-webkit-line-clamp'][0]).toBe('3');
+    expect(actual['--BackdropGap'][0]).toBe('4');
+    await dialog.getByRole('button', { name: 'Close styled backdrop' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+  });
+
+  test(`backdrop styles at ${width}px: declaration-shaped input -> cannot escape the scoped rule`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/?unsafeBackdrop=1');
+    await page.getByRole('button', { name: 'Open styled backdrop', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Backdrop style semantics' });
+    await expect(dialog).toBeVisible();
+
+    expect(await page.locator('body').evaluate((element) =>
+      getComputedStyle(element).getPropertyValue('--backdrop-escaped'))).toBe('');
+    const rule = await dialog.evaluate((element) => {
+      const className = Array.from(element.classList).find((name) => name.startsWith('ilokesto-modal-dialog-'))!;
+      const rule = Array.from(document.styleSheets).flatMap((sheet) => Array.from(sheet.cssRules))
+        .find((rule) => (rule as CSSStyleRule).selectorText === `.${className}::backdrop`) as CSSStyleRule;
+      return { background: rule.style.backgroundColor, rules: rule.parentStyleSheet!.cssRules.length };
+    });
+    expect(rule).toEqual({ background: '', rules: 1 });
+  });
+}
+
 for (const [button, result] of [
   ['Close all then late close', 'undefined'],
   ['Close all then late reject', 'undefined'],

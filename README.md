@@ -88,6 +88,7 @@ Committed operations still invoke their captured callbacks if a store subscriber
 Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing and body scroll locking; focus and dismissal policies remain transport-specific.
 
 Top-layer requires native `<dialog>` and `showModal()` support; no polyfill is included.
+`backdropStyle` follows React inline style semantics in both transports: numeric lengths receive `px`, unitless properties stay unitless, strings retain their CSS units, and custom property names remain case-sensitive. Top-layer lets React normalize the styles on a hidden carrier, then copies parsed CSSOM declarations into its scoped `::backdrop` rule before paint. Values are never interpolated into stylesheet text. Updating or removing the styles clears previous declarations; browser support determines which vendor properties apply.
 If `dialog.close()` or a `method="dialog"` form closes it natively, the modal is removed immediately. The result is `undefined` unless a result or rejection was already set through the modal API; the native `returnValue` is not converted to a typed result. This calls `onModalClose`, but not `onDismiss`.
 
 Browser tests use Playwright. Setup: `pnpm exec playwright install chromium`. License: MIT.
