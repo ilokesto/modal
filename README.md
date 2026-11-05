@@ -83,6 +83,7 @@ Inline, top-layer and hosted inline modals share one body scroll lock across pro
 
 `closeAll()` does not notify callbacks itself; later removal invokes `onModalClose(undefined)`. `reject()` rejects the promise on removal.
 Once a modal is closing, further `close` or `reject` calls neither change its result nor notify. Accepted close/reject operations record their state before invoking `onModalClose`; remove/clear remove their captured items before invoking remaining callbacks. Reentrant callbacks can remove a closing modal or open a new request without changing the old settlement or accidentally removing the new request.
+Committed operations still invoke their captured callbacks if a store subscriber throws, then rethrow the original store error. `clear` attempts every captured callback even if one throws. Without a store error, a single callback error is rethrown unchanged and multiple callback errors are reported as an `AggregateError`.
 
 Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing and body scroll locking; focus and dismissal policies remain transport-specific.
 

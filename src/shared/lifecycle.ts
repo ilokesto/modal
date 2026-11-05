@@ -35,6 +35,36 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
     return () => onModalClose?.(result);
   }
 
+  function commitAndNotify(operation: () => void, notifications: Array<(() => void) | undefined>) {
+    let delegateFailed = false;
+    let delegateError: unknown;
+    try {
+      operation();
+    } catch (error) {
+      // Registry overlay operations commit before notifying synchronous subscribers.
+      delegateFailed = true;
+      delegateError = error;
+    }
+
+    const callbackErrors: unknown[] = [];
+    for (const notify of notifications) {
+      try {
+        notify?.();
+      } catch (error) {
+        callbackErrors.push(error);
+      }
+    }
+    if (delegateFailed) {
+      throw delegateError;
+    }
+    if (callbackErrors.length === 1) {
+      throw callbackErrors[0];
+    }
+    if (callbackErrors.length > 1) {
+      throw new AggregateError(callbackErrors, 'Modal close notification failed');
+    }
+  }
+
   return {
     open: <TResult = unknown>(options: DisplayOptions) => {
       // A duplicate open for an already-pending id must not reset its close
@@ -52,8 +82,7 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
       const item = store.getSnapshot().find((candidate) => candidate.id === id);
 
       const notify = item?.status === 'open' ? takeModalCloseNotification(item, result) : undefined;
-      store.close(id, result);
-      notify?.();
+      commitAndNotify(() => store.close(id, result), [notify]);
     },
     closeAll: () => {
       store.closeAll();
@@ -62,8 +91,7 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
       const item = store.getSnapshot().find((candidate) => candidate.id === id);
 
       const notify = item?.status === 'open' ? takeModalCloseNotification(item, undefined) : undefined;
-      store.reject(id, reason);
-      notify?.();
+      commitAndNotify(() => store.reject(id, reason), [notify]);
     },
     remove: (id) => {
       const items = store.getSnapshot();
@@ -74,8 +102,7 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
       if (targetId !== undefined) {
         notifiedModalIds.delete(targetId);
       }
-      store.remove(targetId);
-      notify?.();
+      commitAndNotify(() => store.remove(targetId), [notify]);
     },
     clear: () => {
       const items = store.getSnapshot();
@@ -84,10 +111,7 @@ export function createModalLifecycleStore(store: OverlayStoreApi): OverlayStoreA
       for (const item of items) {
         notifiedModalIds.delete(item.id);
       }
-      store.clear();
-      for (const notify of notifications) {
-        notify?.();
-      }
+      commitAndNotify(() => store.clear(), notifications);
     },
     subscribe: store.subscribe,
     getSnapshot: store.getSnapshot,

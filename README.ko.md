@@ -83,6 +83,7 @@ Inline, top-layer, 호스팅된 inline 모달은 provider에 관계없이 body �
 
 `closeAll()` 자체는 callback을 알리지 않고 이후 제거 시 `onModalClose(undefined)`가 발생합니다. `reject()`는 제거 시 Promise를 거부합니다.
 이미 closing인 모달의 후속 `close`/`reject`는 결과를 바꾸거나 알림을 발생시키지 않습니다. 수락된 close/reject는 상태를 기록한 뒤 `onModalClose`를 호출하고, remove/clear는 캡처한 항목을 제거한 뒤 남은 콜백을 호출합니다. 콜백이 재진입하여 모달을 제거하거나 새 요청을 열어도 기존 정산값을 바꾸거나 새 요청을 잘못 제거하지 않습니다.
+상태 반영 후 store 구독자가 예외를 던져도 캡처한 콜백을 호출한 뒤 원래 store 예외를 다시 던집니다. `clear`는 콜백 하나가 던져도 나머지 캡처한 콜백을 모두 호출합니다. store 예외가 없으면 콜백 예외 하나는 그대로 다시 던지고, 여러 예외는 `AggregateError`로 전달합니다.
 
 코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍과 body 스크롤 잠금을 공유하며 focus/dismiss 정책은 transport별로 유지합니다.
 
