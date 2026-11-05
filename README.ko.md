@@ -79,9 +79,11 @@ pnpm test
 활성 네이티브 모달 위에 여는 inline 모달은 기본 transport를 포함해 투명한 네이티브 dialog 호스트를 사용합니다. 기존 inline 패널, 위치, 클래스, 스타일, backdrop, focus trap을 유지하면서 네이티브 모달 위에서 조작할 수 있습니다. 서로 다른 provider에서도 동작하며 각 provider의 스택과 dismiss 상태는 공유하지 않습니다. 호스트 선택은 제거될 때까지 유지하므로 아래 모달이 먼저 제거되어도 자식이 다시 마운트되거나 입력이 초기화되지 않습니다. 이미 마운트된 inline 모달은 나중에 네이티브 모달이 열려도 이동하지 않습니다.
 호스팅된 inline 모달이 Escape를 소유하며, 먼저 닫힌 뒤 아래 네이티브 모달로 포커스를 복원합니다. 다른 provider의 네이티브 모달은 같은 Escape로 함께 닫히지 않습니다.
 
+Inline, top-layer, 호스팅된 inline 모달은 provider에 관계없이 body 스크롤 잠금을 공유합니다. 각 모달은 closing 상태에서도 제거될 때까지 잠금을 유지합니다. 마지막 모달이 제거될 때만 첫 모달을 열기 전의 inline `overflow`, `overflow-x`, `overflow-y` 값과 우선순위를 복원합니다. provider가 열린 순서와 다르게 닫히거나 언마운트되어도 같은 규칙을 적용합니다.
+
 `closeAll()` 자체는 callback을 알리지 않고 이후 제거 시 `onModalClose(undefined)`가 발생합니다. `reject()`는 제거 시 Promise를 거부합니다.
 
-코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍만 공유하며 focus/dismiss 정책은 transport별로 유지합니다.
+코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍과 body 스크롤 잠금을 공유하며 focus/dismiss 정책은 transport별로 유지합니다.
 
 Top-layer는 네이티브 `<dialog>`와 `showModal()`이 필요하며 polyfill을 포함하지 않습니다.
 `dialog.close()` 또는 `method="dialog"` 폼이 네이티브로 닫으면 모달을 즉시 제거합니다. modal API에서 결과나 거부를 이미 지정했다면 이를 유지하고, 그 외 결과는 `undefined`입니다. 네이티브 `returnValue`를 typed 결과로 변환하지 않습니다. `onModalClose`는 호출하지만 `onDismiss`는 호출하지 않습니다.

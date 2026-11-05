@@ -79,9 +79,11 @@ Mount only one default provider without `store`: defaults share `globalModalStor
 An inline modal, including the default transport, opened above an active native modal uses a transparent native dialog host. Its inline panel, position, classes, styles, backdrop and focus trap remain intact, while the host makes it operable above the native modal. This works across distinct providers without sharing their stack or dismissal state. The hosting choice lasts until removal, so removing the underlying modal does not remount the child or reset its content. Already-mounted inline modals are not moved when a later native modal opens.
 The hosted inline modal owns Escape: it closes first and restores focus to the underlying native modal. A native modal in another provider is not dismissed by the same Escape.
 
+Inline, top-layer and hosted inline modals share one body scroll lock across providers. Each mounted modal keeps its lock through closing until removal. Only the last removal restores the inline `overflow`, `overflow-x` and `overflow-y` values and priorities captured before the first modal opened, including when providers close or unmount out of order.
+
 `closeAll()` does not notify callbacks itself; later removal invokes `onModalClose(undefined)`. `reject()` rejects the promise on removal.
 
-Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing, not their transport-specific focus or dismissal policies.
+Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing and body scroll locking; focus and dismissal policies remain transport-specific.
 
 Top-layer requires native `<dialog>` and `showModal()` support; no polyfill is included.
 If `dialog.close()` or a `method="dialog"` form closes it natively, the modal is removed immediately. The result is `undefined` unless a result or rejection was already set through the modal API; the native `returnValue` is not converted to a typed result. This calls `onModalClose`, but not `onDismiss`.

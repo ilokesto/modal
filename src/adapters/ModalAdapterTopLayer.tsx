@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback, useId } from 'react';
 import { useIsTopModal } from '../hooks/useIsTopModal';
 import { useModalExit } from '../hooks/useModalExit';
+import { useBodyScrollLock } from '../hooks/useBodyScrollLock';
 import { getFocusableElements } from '../shared/getFocusableElements';
 import type { ModalAdapterProps, ModalPosition } from '../shared/types';
 
@@ -27,7 +28,7 @@ function cssPropertiesToString(style: React.CSSProperties): string {
 }
 
 /**
- * @description Renders a native modal dialog with browser top-layer containment and provider-local dismissal. Requires showModal support; closes the dialog after exit. A native close event removes the modal immediately, preserving any pending result or rejection.
+ * @description Renders a native modal dialog with browser top-layer containment, shared body scroll locking and provider-local dismissal. Requires showModal support; closes the dialog after exit. A native close event removes the modal immediately, preserving any pending result or rejection.
  * @param {ModalAdapterProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
  * @param {'inline' | 'top-layer'} [props.transport] - Router selection hint; this adapter itself always renders a native dialog.
  * @param {ModalPosition} [props.position] - Panel position; defaults to center.
@@ -79,6 +80,7 @@ export function ModalAdapterTopLayer<TResult>({
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const uniqueId = useId().replace(/:/g, '');
   const isTopModal = useIsTopModal(id, dialogRef);
+  useBodyScrollLock();
   const finishExit = useCallback(() => {
     const dialog = dialogRef.current;
     if (dialog && dialog.open) {
