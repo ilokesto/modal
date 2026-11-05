@@ -37,7 +37,7 @@ export type ModalPosition =
   | 'bottom-right';
 
 interface ModalBaseProps<TResult = unknown> {
-  /** Rendering transport; inline is the default. */
+  /** Rendering transport; inline is the default and uses a native host when opened above an active native modal. */
   transport?: 'inline' | 'top-layer';
   /** Panel position; defaults to center. */
   position?: ModalPosition;

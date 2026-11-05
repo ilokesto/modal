@@ -76,6 +76,9 @@ pnpm test
 
 `store` 없는 기본 provider는 하나만 마운트하세요. 기본 provider는 `globalModalStore`를 공유합니다. 여러 provider를 동시에 쓴다면 각각 별도 overlay store를 전달하고 해당 트리의 hook을 사용하세요. 글로벌 `modal` facade는 항상 global store를 대상으로 합니다.
 
+활성 네이티브 모달 위에 여는 inline 모달은 기본 transport를 포함해 투명한 네이티브 dialog 호스트를 사용합니다. 기존 inline 패널, 위치, 클래스, 스타일, backdrop, focus trap을 유지하면서 네이티브 모달 위에서 조작할 수 있습니다. 서로 다른 provider에서도 동작하며 각 provider의 스택과 dismiss 상태는 공유하지 않습니다. 호스트 선택은 제거될 때까지 유지하므로 아래 모달이 먼저 제거되어도 자식이 다시 마운트되거나 입력이 초기화되지 않습니다. 이미 마운트된 inline 모달은 나중에 네이티브 모달이 열려도 이동하지 않습니다.
+호스팅된 inline 모달이 Escape를 소유하며, 먼저 닫힌 뒤 아래 네이티브 모달로 포커스를 복원합니다. 다른 provider의 네이티브 모달은 같은 Escape로 함께 닫히지 않습니다.
+
 `closeAll()` 자체는 callback을 알리지 않고 이후 제거 시 `onModalClose(undefined)`가 발생합니다. `reject()`는 제거 시 Promise를 거부합니다.
 
 코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍만 공유하며 focus/dismiss 정책은 transport별로 유지합니다.

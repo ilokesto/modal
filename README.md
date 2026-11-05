@@ -76,6 +76,9 @@ pnpm test
 
 Mount only one default provider without `store`: defaults share `globalModalStore`. For simultaneous providers, pass each a distinct overlay store and use hooks in its tree. The global `modal` facade always targets the global store.
 
+An inline modal, including the default transport, opened above an active native modal uses a transparent native dialog host. Its inline panel, position, classes, styles, backdrop and focus trap remain intact, while the host makes it operable above the native modal. This works across distinct providers without sharing their stack or dismissal state. The hosting choice lasts until removal, so removing the underlying modal does not remount the child or reset its content. Already-mounted inline modals are not moved when a later native modal opens.
+The hosted inline modal owns Escape: it closes first and restores focus to the underlying native modal. A native modal in another provider is not dismissed by the same Escape.
+
 `closeAll()` does not notify callbacks itself; later removal invokes `onModalClose(undefined)`. `reject()` rejects the promise on removal.
 
 Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing, not their transport-specific focus or dismissal policies.
