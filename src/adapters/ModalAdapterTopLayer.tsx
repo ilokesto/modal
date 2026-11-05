@@ -27,7 +27,7 @@ function cssPropertiesToString(style: React.CSSProperties): string {
 }
 
 /**
- * @description Renders a native modal dialog with browser top-layer containment and provider-local dismissal. Requires showModal support; closes the dialog after exit.
+ * @description Renders a native modal dialog with browser top-layer containment and provider-local dismissal. Requires showModal support; closes the dialog after exit. A native close event removes the modal immediately, preserving any pending result or rejection.
  * @param {ModalAdapterProps<TResult>} props - Modal configuration and external overlay lifecycle controls.
  * @param {'inline' | 'top-layer'} [props.transport] - Router selection hint; this adapter itself always renders a native dialog.
  * @param {ModalPosition} [props.position] - Panel position; defaults to center.
@@ -139,12 +139,14 @@ export function ModalAdapterTopLayer<TResult>({
 
     dialog.addEventListener('cancel', handleCancel);
     dialog.addEventListener('click', handleClick);
+    dialog.addEventListener('close', remove);
 
     return () => {
       dialog.removeEventListener('cancel', handleCancel);
       dialog.removeEventListener('click', handleClick);
+      dialog.removeEventListener('close', remove);
     };
-  }, [close, dismissible, isTopModal, onDismiss, status]);
+  }, [close, dismissible, isTopModal, onDismiss, remove, status]);
 
   const isClosing = status === 'closing';
   const animationDuration = prefersReducedMotion ? '0s' : '0.2s';
