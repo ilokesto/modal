@@ -429,6 +429,57 @@ function ScrollLockDemo() {
   );
 }
 
+function ClosingResultsButton() {
+  const { display, close, closeAll, reject, remove } = useModal();
+  const [result, setResult] = useState('pending');
+  const [notification, setNotification] = useState('pending');
+  const [count, setCount] = useState(0);
+  const [timing, setTiming] = useState('pending');
+  const open = () => {
+    let notifications = 0;
+    void display<string>({
+      id: 'consistent-result',
+      ariaLabel: 'Consistent close result',
+      style: { background: 'white', padding: 24 },
+      onModalClose: (value) => {
+        notifications++;
+        setCount(notifications);
+        setNotification(String(value));
+        remove('consistent-result');
+      },
+      render: () => (
+        <section>
+          <h2>Consistent close result</h2>
+          <button type="button" onClick={() => {
+            closeAll();
+            close('consistent-result', 'ignored');
+            setTiming(notifications === 0 ? 'deferred' : 'early');
+          }}>Close all then late close</button>
+          <button type="button" onClick={() => {
+            closeAll();
+            reject('consistent-result', 'ignored');
+            setTiming(notifications === 0 ? 'deferred' : 'early');
+          }}>Close all then late reject</button>
+          <button type="button" onClick={() => close('consistent-result', 'accepted')}>Close and remove reentrantly</button>
+        </section>
+      ),
+    }).then(
+      (value) => setResult(String(value)),
+      (reason) => setResult(`rejected:${String(reason)}`),
+    );
+  };
+
+  return (
+    <section aria-label="Close consistency demo">
+      <button type="button" onClick={open}>Open consistent result</button>
+      <p>Consistent result: {result}</p>
+      <p>Consistent notification: {notification}</p>
+      <p>Consistent count: {count}</p>
+      <p>Consistent timing: {timing}</p>
+    </section>
+  );
+}
+
 function DemoApp() {
   return (
     <main>
@@ -438,6 +489,7 @@ function DemoApp() {
         <TopLayerButton />
         <NativeCloseButton />
         <MixedTransportButton />
+        <ClosingResultsButton />
         <StackedButton />
         <FocusCandidatesButton transport="inline" />
         <FocusCandidatesButton transport="top-layer" />
