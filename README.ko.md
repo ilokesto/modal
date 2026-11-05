@@ -81,6 +81,7 @@ pnpm test
 코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍만 공유하며 focus/dismiss 정책은 transport별로 유지합니다.
 
 Top-layer는 네이티브 `<dialog>`와 `showModal()`이 필요하며 polyfill을 포함하지 않습니다.
+`dialog.close()` 또는 `method="dialog"` 폼이 네이티브로 닫으면 모달을 즉시 제거합니다. modal API에서 결과나 거부를 이미 지정했다면 이를 유지하고, 그 외 결과는 `undefined`입니다. 네이티브 `returnValue`를 typed 결과로 변환하지 않습니다. `onModalClose`는 호출하지만 `onDismiss`는 호출하지 않습니다.
 
 브라우저 테스트는 Playwright를 사용합니다. 준비: `pnpm exec playwright install chromium`. 라이선스: MIT.
 

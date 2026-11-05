@@ -81,6 +81,7 @@ Mount only one default provider without `store`: defaults share `globalModalStor
 Read `ModalProvider` → `createModalStackRuntime` → `useIsTopModal`. Both adapters share `useModalExit` timing, not their transport-specific focus or dismissal policies.
 
 Top-layer requires native `<dialog>` and `showModal()` support; no polyfill is included.
+If `dialog.close()` or a `method="dialog"` form closes it natively, the modal is removed immediately. The result is `undefined` unless a result or rejection was already set through the modal API; the native `returnValue` is not converted to a typed result. This calls `onModalClose`, but not `onDismiss`.
 
 Browser tests use Playwright. Setup: `pnpm exec playwright install chromium`. License: MIT.
 

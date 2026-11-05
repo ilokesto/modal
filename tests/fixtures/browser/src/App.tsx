@@ -77,6 +77,76 @@ function TopLayerButton() {
   );
 }
 
+function NativeCloseButton() {
+  const { display, reject } = useModal();
+  const [result, setResult] = useState('pending');
+  const [closeResults, setCloseResults] = useState<string[]>([]);
+  const [dismissCount, setDismissCount] = useState(0);
+  const [childResult, setChildResult] = useState('pending');
+
+  const openChild = async () => {
+    const value = await display({
+      id: 'native-close-child',
+      transport: 'top-layer',
+      ariaLabel: 'Native child form',
+      render: () => (
+        <form method="dialog">
+          <button type="submit">Submit child form</button>
+        </form>
+      ),
+    });
+    setChildResult(String(value));
+  };
+
+  const open = async () => {
+    setResult('pending');
+    try {
+      const value = await display<boolean>({
+        id: 'native-close',
+        transport: 'top-layer',
+        ariaLabel: 'Native close demo',
+        onModalClose: (value) => setCloseResults((previous) => [...previous, String(value)]),
+        onDismiss: () => setDismissCount((count) => count + 1),
+        render: (close) => (
+          <section>
+            <h2>Native close demo</h2>
+            <form method="dialog">
+              <button type="submit" value="native-result">Submit native form</button>
+            </form>
+            <button type="button" onClick={(event) => event.currentTarget.closest('dialog')?.close('native-result')}>
+              Close native directly
+            </button>
+            <button type="button" onClick={() => close(true)}>Close scoped</button>
+            <button type="button" onClick={(event) => {
+              close(true);
+              event.currentTarget.closest('dialog')?.close('native-result');
+            }}>Close scoped then native</button>
+            <button type="button" onClick={(event) => {
+              reject('native-close', 'native-rejection');
+              event.currentTarget.closest('dialog')?.close('native-result');
+            }}>Reject then native</button>
+            <button type="button" onClick={openChild}>Open native child</button>
+          </section>
+        ),
+      });
+      setResult(String(value));
+    } catch (reason) {
+      setResult(`rejected:${String(reason)}`);
+    }
+  };
+
+  return (
+    <section aria-label="Native close modal demo">
+      <button type="button" onClick={open}>Open native close demo</button>
+      <p>Native close result: {result}</p>
+      <p>Native close count: {closeResults.length}</p>
+      <p>Native close values: {closeResults.join(',')}</p>
+      <p>Native dismiss count: {dismissCount}</p>
+      <p>Native child result: {childResult}</p>
+    </section>
+  );
+}
+
 function StackedOuterContent({ closeOuter }: { closeOuter: (result?: string) => void }) {
   const { display } = useModal();
 
@@ -233,6 +303,7 @@ function DemoApp() {
         <h1>Modal E2E Fixture</h1>
         <InlineConfirmButton />
         <TopLayerButton />
+        <NativeCloseButton />
         <StackedButton />
         <FocusCandidatesButton transport="inline" />
         <FocusCandidatesButton transport="top-layer" />

@@ -113,6 +113,58 @@ test('top-layer dialog opens and resolves in a real browser', async ({ page }) =
   await expect(page.getByText('Top-layer result: true')).toBeVisible();
 });
 
+for (const [button, result, closeValue] of [
+  ['Submit native form', 'undefined', 'undefined'],
+  ['Close native directly', 'undefined', 'undefined'],
+  ['Close scoped', 'true', 'true'],
+  ['Close scoped then native', 'true', 'true'],
+  ['Reject then native', 'rejected:native-rejection', 'undefined'],
+]) {
+  test(`top-layer native close: ${button} -> settles once and restores focus`, async ({ page }) => {
+    await page.goto('/');
+    const opener = page.getByRole('button', { name: 'Open native close demo' });
+    const dialog = page.getByRole('dialog', { name: 'Native close demo', exact: true });
+    await opener.click();
+
+    await dialog.getByRole('button', { name: button, exact: true }).click();
+
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText(`Native close result: ${result}`, { exact: true })).toBeVisible();
+    await expect(page.getByText('Native close count: 1', { exact: true })).toBeVisible();
+    await expect(page.getByText(`Native close values: ${closeValue}`, { exact: true })).toBeVisible();
+    await expect(page.getByText('Native dismiss count: 0', { exact: true })).toBeVisible();
+    await expect(opener).toBeFocused();
+
+    await opener.click();
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Submit native form', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByText('Native close count: 2', { exact: true })).toBeVisible();
+  });
+}
+
+test('top-layer native child close: form submission -> parent keeps focus and Escape ownership', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open native close demo' }).click();
+  const parent = page.getByRole('dialog', { name: 'Native close demo', exact: true });
+  const childOpener = parent.getByRole('button', { name: 'Open native child' });
+  await childOpener.click();
+  const child = page.getByRole('dialog', { name: 'Native child form', exact: true });
+
+  await child.getByRole('button', { name: 'Submit child form' }).click();
+
+  await expect(child).toHaveCount(0);
+  await expect(parent).toBeVisible();
+  await expect(childOpener).toBeFocused();
+  await expect(page.getByText('Native child result: undefined', { exact: true })).toBeVisible();
+  await expect(page.getByText('Native close count: 0', { exact: true })).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(parent).toHaveCount(0);
+  await expect(page.getByText('Native close count: 1', { exact: true })).toBeVisible();
+  await expect(page.getByText('Native dismiss count: 1', { exact: true })).toBeVisible();
+});
+
 test('top-layer descendant and padding clicks keep the dialog open', async ({ page }) => {
   // Given
   await page.goto('/');
