@@ -2,12 +2,74 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, screen } from '@testing-library/react';
+import type { CSSProperties } from 'react';
 import { ModalAdapterTopLayer } from '../../src/adapters/ModalAdapterTopLayer';
 import { renderWithModalStack } from '../fixtures/modalStackTestUtils';
 
 describe('ModalAdapterTopLayer', () => {
   afterEach(() => {
     cleanup();
+  });
+
+  it('backdrop styles: React numeric lengths, unitless values and custom property names -> retained in the rule', () => {
+    const { container } = renderWithModalStack(
+      <ModalAdapterTopLayer
+        id="styled"
+        isOpen
+        status="open"
+        close={vi.fn()}
+        remove={vi.fn()}
+        ariaLabel="Styled backdrop"
+        backdropStyle={{ padding: 12, opacity: 0.5, lineHeight: 1.25, zIndex: 7, '--BackdropGap': 4 } as CSSProperties}
+        render={() => null}
+      />
+    );
+    const rule = container.querySelector('style')!.sheet!.cssRules[0] as CSSStyleRule;
+
+    expect(rule.style.getPropertyValue('padding')).toBe('12px');
+    expect(rule.style.getPropertyValue('opacity')).toBe('0.5');
+    expect(rule.style.getPropertyValue('line-height')).toBe('1.25');
+    expect(rule.style.getPropertyValue('z-index')).toBe('7');
+    expect(rule.style.getPropertyValue('--BackdropGap')).toBe('4');
+  });
+
+  it('backdrop styles: update and removal -> replaces declarations without retaining stale rules', () => {
+    const props = {
+      id: 'styled', isOpen: true, status: 'open' as const,
+      close: vi.fn(), remove: vi.fn(), ariaLabel: 'Styled backdrop', render: () => null,
+    };
+    const { container, rerender } = renderWithModalStack(
+      <ModalAdapterTopLayer {...props} backdropStyle={{ padding: 12, opacity: 0.5 }} />
+    );
+
+    rerender(<ModalAdapterTopLayer {...props} backdropStyle={{ padding: 0, margin: '2rem' }} />);
+
+    const rule = container.querySelector('style')!.sheet!.cssRules[0] as CSSStyleRule;
+    expect(rule.style.getPropertyValue('padding')).toBe('0px');
+    expect(rule.style.getPropertyValue('margin')).toBe('2rem');
+    expect(rule.style.getPropertyValue('opacity')).toBe('');
+    rerender(<ModalAdapterTopLayer {...props} />);
+    expect(container.querySelector('style')).toBeNull();
+  });
+
+  it('backdrop styles: declaration-shaped input -> cannot introduce another selector', () => {
+    const { container } = renderWithModalStack(
+      <ModalAdapterTopLayer
+        id="styled"
+        isOpen
+        status="open"
+        close={vi.fn()}
+        remove={vi.fn()}
+        ariaLabel="Styled backdrop"
+        backdropStyle={{ backgroundColor: 'red; } body { --escaped: yes; } .unused { color: blue' }}
+        render={() => null}
+      />
+    );
+    const rules = container.querySelector('style')!.sheet!.cssRules;
+
+    expect(rules).toHaveLength(1);
+    expect((rules[0] as CSSStyleRule).selectorText).toContain('::backdrop');
+    expect((rules[0] as CSSStyleRule).style.getPropertyValue('background-color')).toBe('');
   });
 
   it('renders a named native dialog and moves focus inside after showModal', () => {

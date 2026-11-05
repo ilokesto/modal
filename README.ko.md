@@ -88,6 +88,7 @@ Inline, top-layer, 호스팅된 inline 모달은 provider에 관계없이 body �
 코드는 `ModalProvider` → `createModalStackRuntime` → `useIsTopModal` 순서로 읽으세요. 두 adapter는 `useModalExit` 타이밍과 body 스크롤 잠금을 공유하며 focus/dismiss 정책은 transport별로 유지합니다.
 
 Top-layer는 네이티브 `<dialog>`와 `showModal()`이 필요하며 polyfill을 포함하지 않습니다.
+두 transport의 `backdropStyle`은 React inline style 의미를 따릅니다. 숫자 길이에는 `px`를 붙이고, 단위 없는 속성은 그대로 유지하며, 문자열의 CSS 단위와 custom property 이름의 대소문자를 보존합니다. Top-layer는 숨겨진 요소에서 React가 스타일을 정규화한 뒤, 파싱된 CSSOM 선언만 화면을 그리기 전에 해당 `::backdrop` 규칙으로 복사합니다. 값을 stylesheet 문자열에 삽입하지 않습니다. 스타일 변경·제거 시 이전 선언을 지우며 vendor 속성 적용 여부는 브라우저 지원을 따릅니다.
 `dialog.close()` 또는 `method="dialog"` 폼이 네이티브로 닫으면 모달을 즉시 제거합니다. modal API에서 결과나 거부를 이미 지정했다면 이를 유지하고, 그 외 결과는 `undefined`입니다. 네이티브 `returnValue`를 typed 결과로 변환하지 않습니다. `onModalClose`는 호출하지만 `onDismiss`는 호출하지 않습니다.
 
 브라우저 테스트는 Playwright를 사용합니다. 준비: `pnpm exec playwright install chromium`. 라이선스: MIT.

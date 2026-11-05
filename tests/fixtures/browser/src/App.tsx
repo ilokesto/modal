@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createOverlayStore } from '@ilokesto/overlay';
 import { ModalProvider, useModal } from '../../../../src';
@@ -77,6 +77,55 @@ function TopLayerButton() {
       <button type="button" onClick={open}>Open top-layer settings</button>
       <p>Top-layer result: {result}</p>
       <p>Top-layer dismiss count: {dismissCount}</p>
+    </section>
+  );
+}
+
+function BackdropStylesButton() {
+  const { display } = useModal();
+  const unsafe = new URLSearchParams(window.location.search).has('unsafeBackdrop');
+  const backdropStyle = {
+    animation: 'none',
+    padding: 12,
+    borderWidth: 3,
+    borderStyle: 'solid',
+    borderColor: 'rgb(20, 40, 60)',
+    margin: '0.25rem',
+    inset: 0,
+    opacity: 0.65,
+    fontSize: 16,
+    lineHeight: 1.25,
+    zIndex: 7,
+    flexGrow: 2,
+    WebkitTextStrokeWidth: 2,
+    WebkitLineClamp: 3,
+    '--BackdropGap': 4,
+    '--BackdropColor': 'rgb(10, 20, 30)',
+    backgroundColor: unsafe
+      ? 'red; } body { --backdrop-escaped: yes; } .unused { color: blue'
+      : 'var(--BackdropColor)',
+  } as CSSProperties;
+  const open = () => {
+    void display({
+      transport: 'top-layer',
+      ariaLabel: 'Backdrop style semantics',
+      backdropStyle,
+      render: (close) => (
+        <section>
+          <h2>Backdrop style semantics</h2>
+          <p>Numeric lengths, unitless values and custom properties.</p>
+          <button type="button" onClick={() => close()}>Close styled backdrop</button>
+        </section>
+      ),
+    });
+  };
+
+  return (
+    <section aria-label="Backdrop style demo">
+      <button type="button" onClick={open}>Open styled backdrop</button>
+      <div hidden style={{ display: 'none' }}>
+        <div data-testid="backdrop-reference" style={backdropStyle} />
+      </div>
     </section>
   );
 }
@@ -487,6 +536,7 @@ function DemoApp() {
         <h1>Modal E2E Fixture</h1>
         <InlineConfirmButton />
         <TopLayerButton />
+        <BackdropStylesButton />
         <NativeCloseButton />
         <MixedTransportButton />
         <ClosingResultsButton />

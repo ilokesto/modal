@@ -1,6 +1,20 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
+for (const width of [1280, 390]) {
+  test(`styled native backdrop at ${width}px -> no detectable axe violations`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Open styled backdrop', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Backdrop style semantics' });
+    await expect(dialog).toHaveCSS('opacity', '1');
+
+    const results = await new AxeBuilder({ page }).include('body').analyze();
+
+    expect(results.violations).toEqual([]);
+  });
+}
+
 test('inline modal has no detectable axe violations', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Open inline confirm' }).click();
